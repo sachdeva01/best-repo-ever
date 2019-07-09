@@ -1,2 +1,2 @@
 # best-repo-ever
-my first repository
+my first repository  is cool
