@@ -1,0 +1,52 @@
+.App {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  color: #666;
+}
+
+main {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.items-list {
+  margin-top: 2rem;
+}
+
+.items-list h2 {
+  margin-bottom: 1rem;
+}
+
+.item-card {
+  background: #f5f5f5;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+}
+
+.item-card h3 {
+  margin: 0 0 0.5rem 0;
+}
+
+.item-card p {
+  margin: 0;
+  color: #666;
+}
+
+.error {
+  color: #d32f2f;
+  font-weight: bold;
+}
