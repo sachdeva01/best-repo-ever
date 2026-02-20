@@ -42,7 +42,7 @@ echo ""
 
 # 2. Refresh optimal allocation data
 echo "2️⃣  Fetching Fresh ETF Data..."
-ALLOCATION_RESPONSE=$(curl -s http://localhost:8000/api/portfolio-allocation/optimal)
+ALLOCATION_RESPONSE=$(curl -s http://localhost:8000/api/portfolio-allocation/calculate)
 
 if [ $? -eq 0 ]; then
     echo "   ✅ Updated 15 ETF allocations:"

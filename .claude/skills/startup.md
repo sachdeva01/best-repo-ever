@@ -92,7 +92,7 @@ fi
 
 # Portfolio allocation
 echo "   💼 Fetching fresh ETF data (15 ETFs)..."
-ALLOCATION_RESPONSE=$(curl -s http://localhost:8000/api/portfolio-allocation/optimal)
+ALLOCATION_RESPONSE=$(curl -s http://localhost:8000/api/portfolio-allocation/calculate)
 if [ $? -eq 0 ]; then
     WEIGHTED_YIELD=$(echo "$ALLOCATION_RESPONSE" | grep -o '"weighted_average_yield":[0-9.]*' | cut -d: -f2)
     echo "   ✅ Portfolio allocation updated"

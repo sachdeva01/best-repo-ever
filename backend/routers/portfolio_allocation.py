@@ -143,8 +143,11 @@ async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
     """Calculate portfolio allocation with actual ETF yields"""
     from models import RetirementConfig
 
-    # Get total portfolio value
-    accounts = db.query(BrokerageAccount).all()
+    # Get total portfolio value from all accounts EXCEPT "Recommended Portfolio"
+    # This prevents double-counting and uses only real account balances
+    accounts = db.query(BrokerageAccount).filter(
+        BrokerageAccount.name != "Recommended Portfolio"
+    ).all()
     total_portfolio_value = sum(acc.current_balance for acc in accounts)
 
     # Get tax rates from config
@@ -277,8 +280,11 @@ async def implement_portfolio_allocation(db: Session = Depends(get_db)):
     db.query(Holding).filter(Holding.account_id == account.id).delete()
     db.commit()
 
-    # Get total portfolio value from all accounts
-    all_accounts = db.query(BrokerageAccount).all()
+    # Get total portfolio value from all accounts EXCEPT the "Recommended Portfolio" account
+    # This prevents double-counting when re-implementing the allocation
+    all_accounts = db.query(BrokerageAccount).filter(
+        BrokerageAccount.name != "Recommended Portfolio"
+    ).all()
     total_portfolio_value = sum(acc.current_balance for acc in all_accounts)
 
     # Create holdings based on allocation
