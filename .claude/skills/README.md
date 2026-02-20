@@ -4,8 +4,23 @@ Custom Claude Code skills for managing the portfolio tracker application.
 
 ## Available Skills
 
+### 🚀 `/startup` ⭐ RECOMMENDED
+**Your primary startup command!** Starts both servers AND automatically refreshes all market data:
+- Starts backend on port 8000
+- Starts frontend on port 5173
+- Refreshes market indicators (10-year Treasury, S&P 500, Nasdaq)
+- Updates all 15 ETF prices, yields, and historical performance
+- Loads portfolio stats with fresh data
+
+### 📊 `/refresh-market-data`
+Refresh market data without restarting servers. Updates:
+- Live market indicators
+- ETF prices and dividend yields
+- Historical performance (3yr, 5yr, 10yr, 20yr)
+- Optimal portfolio allocation
+
 ### 🚀 `/start-servers`
-Start both backend (port 8000) and frontend (port 5173) development servers with auto-reload.
+Start both backend (port 8000) and frontend (port 5173) development servers with auto-reload (without data refresh).
 
 ### 📊 `/init-database`
 Initialize or reset the database with fresh schema and seed data. Creates backup of existing data.
@@ -59,10 +74,21 @@ Invoke with: `/skill-name`
 
 ## Common Workflows
 
-**Starting fresh work session:**
+**Starting fresh work session (RECOMMENDED):**
+```
+/startup
+```
+This single command starts everything with fresh market data!
+
+**Alternative - Start without data refresh:**
 ```
 /status
 /start-servers
+```
+
+**Refresh market data during work:**
+```
+/refresh-market-data
 ```
 
 **After making changes:**
@@ -75,6 +101,7 @@ Invoke with: `/skill-name`
 ```
 /backup-data
 /init-database
+/startup
 ```
 
 ## Notes
