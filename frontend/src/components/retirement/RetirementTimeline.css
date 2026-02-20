@@ -1,0 +1,145 @@
+.retirement-timeline {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.retirement-timeline h3 {
+  margin: 0 0 1.5rem 0;
+  color: #2d3748;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.timeline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.timeline-marker {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border: 3px solid;
+  background: white;
+  z-index: 2;
+  position: relative;
+}
+
+.timeline-marker.current {
+  border-color: #2b6cb0;
+  background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+  color: white;
+}
+
+.timeline-marker.future {
+  border-color: #cbd5e0;
+  background: #f7fafc;
+  color: #4a5568;
+}
+
+.timeline-marker.target {
+  border-color: #48bb78;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+}
+
+.marker-icon {
+  font-size: 1.5rem;
+}
+
+.marker-age {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.timeline-content {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.timeline-content h4 {
+  margin: 0 0 0.25rem 0;
+  color: #2d3748;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.timeline-years {
+  margin: 0;
+  color: #718096;
+  font-size: 0.8rem;
+}
+
+.timeline-connector {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  right: -50%;
+  height: 3px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+
+.timeline-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 6px;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: #718096;
+  text-align: center;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2b6cb0;
+}
+
+@media (max-width: 768px) {
+  .timeline {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .timeline-connector {
+    display: none;
+  }
+
+  .timeline-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

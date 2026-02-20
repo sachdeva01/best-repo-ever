@@ -1,0 +1,153 @@
+.expense-category-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.expense-category-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.category-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.category-icon {
+  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7fafc;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.category-info {
+  flex: 1;
+}
+
+.category-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.category-description {
+  margin: 0;
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.category-amounts {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1rem;
+}
+
+.view-mode {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.amount-display {
+  flex: 1;
+}
+
+.amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.amount-row:last-child {
+  margin-bottom: 0;
+}
+
+.amount-label {
+  font-size: 0.875rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.amount-value {
+  font-weight: 600;
+}
+
+.amount-value.annual {
+  font-size: 1.25rem;
+  color: #2b6cb0;
+}
+
+.amount-value.monthly {
+  font-size: 1rem;
+  color: #4a5568;
+}
+
+.edit-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.amount-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.amount-input-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.amount-input-group input {
+  padding: 0.75rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.amount-input-group input:focus {
+  outline: none;
+  border-color: #2b6cb0;
+  box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .expense-category-card {
+    padding: 1rem;
+  }
+
+  .category-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+  }
+
+  .view-mode {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

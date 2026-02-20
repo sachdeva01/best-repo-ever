@@ -1,0 +1,50 @@
+.layout {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+}
+
+.layout-header {
+  background-color: #ffffff;
+  padding: 2rem;
+  text-align: center;
+  border-bottom: 1px solid #e0e4e8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.app-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.app-subtitle {
+  margin: 0.5rem 0 0 0;
+  font-size: 1rem;
+  color: #718096;
+  font-weight: 400;
+}
+
+.layout-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .layout-header {
+    padding: 1.5rem;
+  }
+
+  .app-title {
+    font-size: 1.5rem;
+  }
+
+  .app-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .layout-content {
+    padding: 1rem;
+  }
+}

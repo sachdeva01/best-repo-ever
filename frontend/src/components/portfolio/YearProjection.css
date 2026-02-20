@@ -1,0 +1,258 @@
+.year-projection {
+  padding: 1.5rem;
+}
+
+.projection-header {
+  margin-bottom: 2rem;
+}
+
+.projection-header h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  color: #1a1a1a;
+}
+
+.projection-header p {
+  margin: 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.summary-card.status {
+  border: 2px solid;
+}
+
+.summary-card.status.success {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.summary-card.status.warning {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.summary-value.positive {
+  color: #10b981;
+}
+
+.summary-value.negative {
+  color: #ef4444;
+}
+
+.projection-table-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.projection-table-card h4 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.projection-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.projection-table th {
+  background: #f9fafb;
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.projection-table td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.projection-table tr:hover {
+  background: #f9fafb;
+}
+
+.projection-table .milestone-row {
+  background: #fef3c7;
+  font-weight: 600;
+}
+
+.projection-table .milestone-row:hover {
+  background: #fde68a;
+}
+
+.projection-table .deficit-row {
+  background: #fee2e2;
+}
+
+.projection-table .deficit-row:hover {
+  background: #fecaca;
+}
+
+.projection-table .currency {
+  text-align: right;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+}
+
+.projection-table .currency.highlight {
+  background: #eff6ff;
+  font-weight: 600;
+}
+
+.projection-table .currency.positive {
+  color: #059669;
+}
+
+.projection-table .currency.negative {
+  color: #dc2626;
+}
+
+.projection-table .milestone {
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.phase-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.phase-badge.accumulation {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.phase-badge.withdrawal {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.assumptions-card,
+.interpretation-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.assumptions-card h4,
+.interpretation-card h4 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+}
+
+.assumptions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.assumption-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.assumption-label {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.assumption-value {
+  color: #1a1a1a;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.interpretation-card {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.interpretation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.interpretation-item {
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.interpretation-item strong {
+  color: #1e40af;
+}
+
+@media (max-width: 768px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .projection-table {
+    font-size: 0.75rem;
+  }
+
+  .projection-table th,
+  .projection-table td {
+    padding: 0.5rem 0.25rem;
+  }
+}

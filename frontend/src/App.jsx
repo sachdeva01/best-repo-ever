@@ -1,54 +1,28 @@
-import { useState, useEffect } from 'react'
-import { fetchItems } from './api/client'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import Layout from './components/layout/Layout'
+import DashboardPage from './pages/DashboardPage'
+import AccountsPage from './pages/AccountsPage'
+import ExpensesPage from './pages/ExpensesPage'
+import ExpenseTrackerPage from './pages/ExpenseTrackerPage'
+import RetirementPage from './pages/RetirementPage'
+import PortfolioManagementPage from './pages/PortfolioManagementPage'
 import './App.css'
 
 function App() {
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    loadItems()
-  }, [])
-
-  const loadItems = async () => {
-    try {
-      setLoading(true)
-      const data = await fetchItems()
-      setItems(data.items)
-      setError(null)
-    } catch (err) {
-      setError('Failed to load items')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
-    <div className="App">
-      <header>
-        <h1>My App</h1>
-        <p>FastAPI + React Full-Stack Application</p>
-      </header>
-
-      <main>
-        {loading && <p>Loading...</p>}
-        {error && <p className="error">{error}</p>}
-
-        {!loading && !error && (
-          <div className="items-list">
-            <h2>Items</h2>
-            {items.map(item => (
-              <div key={item.id} className="item-card">
-                <h3>{item.name}</h3>
-                <p>{item.description}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="accounts" element={<AccountsPage />} />
+          <Route path="expenses" element={<ExpensesPage />} />
+          <Route path="expense-tracker" element={<ExpenseTrackerPage />} />
+          <Route path="retirement" element={<RetirementPage />} />
+          <Route path="portfolio-management" element={<PortfolioManagementPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
 

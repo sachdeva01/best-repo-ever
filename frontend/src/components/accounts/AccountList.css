@@ -1,0 +1,186 @@
+.account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.no-accounts {
+  text-align: center;
+  padding: 3rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.no-accounts p {
+  color: #718096;
+  font-size: 1.1rem;
+}
+
+.brokerage-group {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.brokerage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+  color: white;
+}
+
+.brokerage-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.brokerage-total {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.accounts {
+  padding: 1rem;
+}
+
+.account-card {
+  background: #f7fafc;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.account-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.account-header:hover {
+  background: #edf2f7;
+}
+
+.account-info {
+  flex: 1;
+}
+
+.account-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.account-name-row h4 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+}
+
+.account-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #e2e8f0;
+  color: #4a5568;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.account-details {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.account-balance {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2b6cb0;
+}
+
+.account-yield {
+  color: #48bb78;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.account-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.5rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.btn-icon:hover {
+  opacity: 1;
+}
+
+.expand-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.5rem;
+  color: #4a5568;
+  transition: transform 0.2s;
+}
+
+.account-expanded {
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+}
+
+@media (max-width: 768px) {
+  .brokerage-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .account-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .account-actions {
+    align-self: flex-end;
+  }
+
+  .account-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

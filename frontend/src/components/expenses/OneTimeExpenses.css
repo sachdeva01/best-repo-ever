@@ -1,0 +1,288 @@
+.one-time-expenses {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.onetime-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.onetime-header h3 {
+  margin: 0 0 0.25rem 0;
+  color: #1a1a1a;
+  font-size: 1.5rem;
+}
+
+.projection-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.projection-controls label {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.projection-controls select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.future-section {
+  margin-bottom: 2.5rem;
+}
+
+.historical-section {
+  margin-bottom: 2rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h4 {
+  margin: 0;
+  color: #374151;
+  font-size: 1.2rem;
+}
+
+.total-upcoming {
+  padding: 0.5rem 1rem;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.count-badge {
+  padding: 0.25rem 0.75rem;
+  background: #f3f4f6;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.year-group {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.year-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.year-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.year-label {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.years-away {
+  padding: 0.25rem 0.75rem;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.year-total {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #dc2626;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+}
+
+.expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.expense-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.expense-item:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.expense-item.future {
+  border-left: 4px solid #f59e0b;
+}
+
+.expense-item.historical {
+  border-left: 4px solid #10b981;
+}
+
+.expense-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.expense-content {
+  flex: 1;
+}
+
+.expense-title {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.expense-desc {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.expense-meta {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.expense-amount {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.future-amount {
+  color: #dc2626;
+}
+
+.historical-amount {
+  color: #059669;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+}
+
+.empty-state h3 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+}
+
+.empty-state p {
+  margin: 0 0 1.5rem 0;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.example-box {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: #eff6ff;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+  text-align: left;
+  color: #1e40af;
+}
+
+.example-box strong {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.example-box ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.5rem;
+}
+
+.example-box li {
+  margin-bottom: 0.25rem;
+}
+
+.planning-tips {
+  padding: 1.5rem;
+  background: #f0fdf4;
+  border-radius: 8px;
+  border-left: 4px solid #10b981;
+}
+
+.planning-tips h4 {
+  margin: 0 0 1rem 0;
+  color: #065f46;
+  font-size: 1rem;
+}
+
+.planning-tips ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #064e3b;
+  line-height: 1.8;
+}
+
+.planning-tips li {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .one-time-expenses {
+    padding: 1rem;
+  }
+
+  .onetime-header {
+    flex-direction: column;
+  }
+
+  .year-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .expense-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .expense-amount {
+    align-self: flex-end;
+  }
+}

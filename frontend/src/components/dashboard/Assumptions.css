@@ -1,0 +1,125 @@
+.assumptions-section {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.assumptions-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.assumptions-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.assumptions-subtitle {
+  margin: 0;
+  color: #718096;
+  font-size: 0.95rem;
+}
+
+.assumptions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.assumption-category {
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border-left: 4px solid #3182ce;
+}
+
+.assumption-category h4 {
+  margin: 0 0 1rem 0;
+  color: #2b6cb0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.assumption-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.assumption-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: start;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+}
+
+.assumption-label {
+  font-size: 0.875rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.assumption-value {
+  font-size: 0.875rem;
+  color: #2d3748;
+  font-weight: 700;
+  text-align: right;
+}
+
+.assumption-note {
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
+  color: #718096;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+.assumptions-disclaimer {
+  padding: 1.5rem;
+  background: #fffaf0;
+  border-left: 4px solid #ed8936;
+  border-radius: 8px;
+}
+
+.assumptions-disclaimer p {
+  margin: 0;
+  color: #7c2d12;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.assumptions-disclaimer strong {
+  color: #c05621;
+}
+
+@media (max-width: 1200px) {
+  .assumptions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .assumptions-section {
+    padding: 1rem;
+  }
+
+  .assumptions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assumption-item {
+    grid-template-columns: 1fr;
+  }
+
+  .assumption-value {
+    text-align: left;
+  }
+}

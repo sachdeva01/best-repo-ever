@@ -9,11 +9,6 @@ const apiClient = axios.create({
   },
 })
 
-export const fetchItems = async () => {
-  const response = await apiClient.get('/api/items')
-  return response.data
-}
-
 export const healthCheck = async () => {
   const response = await apiClient.get('/api/health')
   return response.data

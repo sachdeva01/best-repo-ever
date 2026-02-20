@@ -1,0 +1,243 @@
+.recurring-expenses {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.recurring-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.recurring-header h3 {
+  margin: 0 0 0.25rem 0;
+  color: #1a1a1a;
+  font-size: 1.5rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.total-annual-card {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 8px;
+  color: white;
+  text-align: right;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.total-annual-card .card-label {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-bottom: 0.25rem;
+}
+
+.total-annual-card .card-value {
+  font-size: 1.75rem;
+  font-weight: bold;
+}
+
+.period-section {
+  margin-bottom: 2.5rem;
+}
+
+.period-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+
+.period-header h4 {
+  margin: 0;
+  color: #374151;
+  font-size: 1.2rem;
+}
+
+.period-total {
+  padding: 0.25rem 0.75rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.expenses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.expense-card {
+  padding: 1.25rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.expense-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.expense-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.category-name {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 1rem;
+}
+
+.frequency-badge {
+  padding: 0.25rem 0.5rem;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.expense-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.expense-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.amount-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+}
+
+.amount-row.highlight {
+  background: #eff6ff;
+  font-weight: 600;
+}
+
+.amount-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.amount-value {
+  color: #1a1a1a;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  font-size: 0.9rem;
+}
+
+.expense-footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.next-date {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.recurring-summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.recurring-summary h4 {
+  margin: 0 0 1rem 0;
+  color: #1e40af;
+  font-size: 1rem;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+}
+
+.summary-label {
+  color: #374151;
+  font-weight: 500;
+}
+
+.summary-value {
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+}
+
+.empty-state h3 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .recurring-expenses {
+    padding: 1rem;
+  }
+
+  .recurring-header {
+    flex-direction: column;
+  }
+
+  .total-annual-card {
+    width: 100%;
+    text-align: center;
+  }
+
+  .period-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .expenses-grid {
+    grid-template-columns: 1fr;
+  }
+}

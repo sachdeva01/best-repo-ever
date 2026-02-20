@@ -1,0 +1,227 @@
+.monte-carlo-simulation {
+  padding: 1.5rem;
+}
+
+.simulation-header {
+  margin-bottom: 2rem;
+}
+
+.simulation-header h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  color: #1a1a1a;
+}
+
+.simulation-header p {
+  margin: 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.success-rate-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.success-rate-content {
+  text-align: center;
+}
+
+.success-rate-label {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+}
+
+.success-rate-value {
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
+}
+
+.success-rate-value.high {
+  color: #4ade80;
+}
+
+.success-rate-value.medium {
+  color: #fbbf24;
+}
+
+.success-rate-value.low {
+  color: #f87171;
+}
+
+.success-rate-description {
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  opacity: 0.95;
+}
+
+.simulation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.final-value-card,
+.parameters-card,
+.percentiles-table-card,
+.interpretation-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.final-value-card h4,
+.parameters-card h4,
+.percentiles-table-card h4,
+.interpretation-card h4 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+}
+
+.stats-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.stat-row.highlight {
+  background: #dbeafe;
+  font-weight: 600;
+}
+
+.stat-label {
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.stat-value {
+  color: #1a1a1a;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.params-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.param-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.param-item:last-child {
+  border-bottom: none;
+}
+
+.param-label {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.param-value {
+  color: #1a1a1a;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.percentiles-table-card {
+  grid-column: 1 / -1;
+}
+
+.table-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.percentiles-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.percentiles-table th {
+  background: #f9fafb;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.percentiles-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1a1a1a;
+}
+
+.percentiles-table tr:hover {
+  background: #f9fafb;
+}
+
+.percentiles-table .highlight-col {
+  background: #eff6ff;
+  font-weight: 600;
+}
+
+.interpretation-card {
+  grid-column: 1 / -1;
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.interpretation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.interpretation-item {
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.interpretation-item strong {
+  color: #1e40af;
+}
+
+@media (max-width: 768px) {
+  .simulation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .success-rate-value {
+    font-size: 2.5rem;
+  }
+}

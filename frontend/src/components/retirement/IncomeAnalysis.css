@@ -1,0 +1,168 @@
+.income-analysis {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.income-analysis h3 {
+  margin: 0 0 1.5rem 0;
+  color: #2d3748;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.analysis-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.analysis-section {
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border-left: 4px solid #2b6cb0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-header h4 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.status-badge.sufficient {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status-badge.shortfall {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.metric-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metric-card {
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card.highlight {
+  border: 2px solid #2b6cb0;
+}
+
+.metric-card.gap {
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+}
+
+.metric-card.surplus {
+  background: #f0fff4;
+  border: 1px solid #9ae6b4;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.metric-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.metric-value.expense {
+  color: #e53e3e;
+}
+
+.metric-value.income {
+  color: #48bb78;
+}
+
+.metric-value.ss-income {
+  color: #2b6cb0;
+}
+
+.yield-info {
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.yield-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.yield-row:not(:last-child) {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.yield-row.required {
+  font-weight: 600;
+}
+
+.yield-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2b6cb0;
+}
+
+.ss-impact {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #ebf8ff;
+  border-radius: 6px;
+  border-left: 4px solid #3182ce;
+}
+
+.ss-impact p {
+  margin: 0;
+  color: #2c5282;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .metric-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
