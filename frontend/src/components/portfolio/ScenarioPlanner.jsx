@@ -171,6 +171,27 @@ function ScenarioPlanner({ presets }) {
           </div>
 
           <div className="input-group">
+            <label>Target Gross Income</label>
+            <input
+              type="number"
+              placeholder="Target gross income"
+              value={scenarioInput.target_gross_income || ''}
+              onChange={(e) => handleInputChange('target_gross_income', e.target.value)}
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Blended Tax Rate (%)</label>
+            <input
+              type="number"
+              step="0.1"
+              placeholder="Tax rate"
+              value={scenarioInput.blended_tax_rate ? scenarioInput.blended_tax_rate * 100 : ''}
+              onChange={(e) => handleInputChange('blended_tax_rate', e.target.value ? parseFloat(e.target.value) / 100 : null)}
+            />
+          </div>
+
+          <div className="input-group">
             <label>Social Security (Monthly)</label>
             <input
               type="number"
@@ -344,6 +365,42 @@ function ScenarioPlanner({ presets }) {
               </div>
             </div>
           </div>
+
+          {scenarioResult.income_details && (
+            <div className="income-details">
+              <h4>💵 Income & Tax Details</h4>
+              <div className="details-grid">
+                <div className="detail-card">
+                  <span className="detail-label">Gross Income</span>
+                  <span className="detail-value">{formatCurrency(scenarioResult.income_details.gross_income)}</span>
+                </div>
+                <div className="detail-card">
+                  <span className="detail-label">Blended Tax Rate</span>
+                  <span className="detail-value">{formatPercentage(scenarioResult.income_details.blended_tax_rate * 100, 1)}</span>
+                </div>
+                <div className="detail-card">
+                  <span className="detail-label">Tax Amount</span>
+                  <span className="detail-value negative">{formatCurrency(scenarioResult.income_details.tax_on_income)}</span>
+                </div>
+                <div className="detail-card highlight">
+                  <span className="detail-label">Net Income After Tax</span>
+                  <span className="detail-value">{formatCurrency(scenarioResult.income_details.net_income_after_tax)}</span>
+                </div>
+                {scenarioResult.income_details.target_gross_income && (
+                  <>
+                    <div className="detail-card">
+                      <span className="detail-label">Target Gross Income</span>
+                      <span className="detail-value">{formatCurrency(scenarioResult.income_details.target_gross_income)}</span>
+                    </div>
+                    <div className="detail-card">
+                      <span className="detail-label">Meets Target?</span>
+                      <span className="detail-value">{scenarioResult.income_details.income_meets_target ? '✅ Yes' : '❌ No'}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

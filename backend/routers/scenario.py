@@ -22,6 +22,8 @@ class ScenarioInput(BaseModel):
     target_portfolio_value: Optional[float] = None
 
     # Income assumptions
+    target_gross_income: Optional[float] = None  # Target gross income at retirement
+    blended_tax_rate: Optional[float] = None  # Blended tax rate (e.g., 0.20 for 20%)
     annual_expenses: Optional[float] = None
     social_security_monthly: Optional[float] = None
 
@@ -76,8 +78,26 @@ def run_scenario_calculation(db: Session, scenario: ScenarioInput) -> dict:
 
     # Income calculations
     annual_income = portfolio_value * portfolio_yield
-    income_gap_before_ss = expenses_at_withdrawal - annual_income
-    income_gap_after_ss = net_expenses_with_ss - annual_income
+
+    # Tax calculations
+    target_gross_income = scenario.target_gross_income if scenario.target_gross_income is not None else None
+    blended_tax_rate = scenario.blended_tax_rate if scenario.blended_tax_rate is not None else 0.20
+
+    if target_gross_income:
+        gross_income = annual_income
+        tax_on_income = gross_income * blended_tax_rate
+        net_income_after_tax = gross_income - tax_on_income
+        target_net_income = target_gross_income * (1 - blended_tax_rate)
+        income_meets_target = gross_income >= target_gross_income
+    else:
+        gross_income = annual_income
+        tax_on_income = gross_income * blended_tax_rate
+        net_income_after_tax = gross_income - tax_on_income
+        target_net_income = None
+        income_meets_target = None
+
+    income_gap_before_ss = expenses_at_withdrawal - net_income_after_tax
+    income_gap_after_ss = net_expenses_with_ss - net_income_after_tax
 
     # Portfolio projection
     portfolio_at_withdrawal = portfolio_value * ((1 + portfolio_growth_rate) ** years_to_withdrawal)
@@ -109,9 +129,9 @@ def run_scenario_calculation(db: Session, scenario: ScenarioInput) -> dict:
 
     final_portfolio_value = projected_portfolio
 
-    # Calculate success metrics
-    income_sufficient_before_ss = annual_income >= expenses_at_withdrawal
-    income_sufficient_after_ss = annual_income >= net_expenses_with_ss if net_expenses_with_ss > 0 else True
+    # Calculate success metrics (use net income after tax)
+    income_sufficient_before_ss = net_income_after_tax >= expenses_at_withdrawal
+    income_sufficient_after_ss = net_income_after_tax >= net_expenses_with_ss if net_expenses_with_ss > 0 else True
     target_met = final_portfolio_value >= target_portfolio_value
 
     # Progress metrics
@@ -139,6 +159,13 @@ def run_scenario_calculation(db: Session, scenario: ScenarioInput) -> dict:
         },
         "income_analysis": {
             "annual_dividend_income": round(annual_income, 2),
+            "gross_income": round(gross_income, 2),
+            "blended_tax_rate": round(blended_tax_rate, 4),
+            "tax_on_income": round(tax_on_income, 2),
+            "net_income_after_tax": round(net_income_after_tax, 2),
+            "target_gross_income": round(target_gross_income, 2) if target_gross_income else None,
+            "target_net_income": round(target_net_income, 2) if target_net_income else None,
+            "income_meets_target": income_meets_target,
             "expenses_at_withdrawal": round(expenses_at_withdrawal, 2),
             "income_gap_before_ss": round(income_gap_before_ss, 2),
             "expenses_at_ss_start": round(expenses_at_ss_start, 2),
@@ -230,14 +257,14 @@ async def analyze_scenario(scenario: ScenarioInput, db: Session = Depends(get_db
         "comparison": {
             "baseline": {
                 "net_worth": baseline_result["inputs"]["portfolio_value"],
-                "annual_income": baseline_result["income_analysis"]["annual_dividend_income"],
+                "annual_income": baseline_result["income_analysis"]["net_income_after_tax"],
                 "required_yield": baseline_result["income_analysis"]["expenses_at_withdrawal"] / baseline_result["inputs"]["portfolio_value"] if baseline_result["inputs"]["portfolio_value"] > 0 else 0,
                 "income_sufficient": baseline_result["income_analysis"]["income_sufficient_before_ss"],
                 "on_track": baseline_result["projections"]["target_met"]
             },
             "scenario": {
                 "net_worth": scenario_result["inputs"]["portfolio_value"],
-                "annual_income": scenario_result["income_analysis"]["annual_dividend_income"],
+                "annual_income": scenario_result["income_analysis"]["net_income_after_tax"],
                 "required_yield": scenario_result["income_analysis"]["expenses_at_withdrawal"] / scenario_result["inputs"]["portfolio_value"] if scenario_result["inputs"]["portfolio_value"] > 0 else 0,
                 "income_sufficient": scenario_result["income_analysis"]["income_sufficient_before_ss"],
                 "on_track": scenario_result["projections"]["target_met"]
@@ -252,6 +279,15 @@ async def analyze_scenario(scenario: ScenarioInput, db: Session = Depends(get_db
             "years_to_withdrawal": scenario_result["timeline"]["years_to_withdrawal"],
             "years_in_retirement": scenario_result["timeline"]["years_in_retirement"],
             "inflation_rate": scenario_result["inputs"]["inflation_rate"]
+        },
+        "income_details": {
+            "gross_income": scenario_result["income_analysis"]["gross_income"],
+            "blended_tax_rate": scenario_result["income_analysis"]["blended_tax_rate"],
+            "tax_on_income": scenario_result["income_analysis"]["tax_on_income"],
+            "net_income_after_tax": scenario_result["income_analysis"]["net_income_after_tax"],
+            "target_gross_income": scenario_result["income_analysis"]["target_gross_income"],
+            "target_net_income": scenario_result["income_analysis"]["target_net_income"],
+            "income_meets_target": scenario_result["income_analysis"]["income_meets_target"]
         }
     }
 
@@ -317,14 +353,23 @@ async def get_scenario_presets(db: Session = Depends(get_db)):
     # Calculate blended yield at 57
     blended_yield_57 = (investments_at_57 * investment_yield_53 + cash_at_57 * cash_yield_53) / portfolio_at_57
 
+    # Calculate projected income for both scenarios
+    gross_income_53 = portfolio_at_53 * blended_yield_53
+    net_income_53 = gross_income_53 * 0.80  # After 20% tax
+
+    gross_income_57 = portfolio_at_57 * blended_yield_57
+    net_income_57 = gross_income_57 * 0.80  # After 20% tax
+
     presets = [
         {
             "name": "🎯 Retire at 53 (+$250K)",
-            "description": f"Retire at 53 with $250K added. Portfolio: ${portfolio_at_53:,.0f} (Inv: ${investments_at_53:,.0f} @ 8%, Cash: ${cash_at_53:,.0f} @ {weighted_cash_yield*100:.2f}%)",
+            "description": f"Target: $320K gross income. Portfolio: ${portfolio_at_53:,.0f} → Gross: ${gross_income_53:,.0f}, Net (20% tax): ${net_income_53:,.0f}",
             "scenario": ScenarioInput(
                 portfolio_value=round(portfolio_at_53, 2),
                 portfolio_yield=round(blended_yield_53, 4),
                 portfolio_growth_rate=0.065,  # Blended growth rate
+                target_gross_income=320000.0,
+                blended_tax_rate=0.20,
                 current_age=51,
                 withdrawal_start_age=53,
                 social_security_start_age=67,
@@ -333,11 +378,13 @@ async def get_scenario_presets(db: Session = Depends(get_db)):
         },
         {
             "name": "🎯 Retire at 57 (+$600K)",
-            "description": f"Retire at 57 with $600K added. Portfolio: ${portfolio_at_57:,.0f} (Inv: ${investments_at_57:,.0f} @ 8%, Cash: ${cash_at_57:,.0f} @ {weighted_cash_yield*100:.2f}%)",
+            "description": f"Target: $320K gross income. Portfolio: ${portfolio_at_57:,.0f} → Gross: ${gross_income_57:,.0f}, Net (20% tax): ${net_income_57:,.0f}",
             "scenario": ScenarioInput(
                 portfolio_value=round(portfolio_at_57, 2),
                 portfolio_yield=round(blended_yield_57, 4),
                 portfolio_growth_rate=0.065,  # Blended growth rate
+                target_gross_income=320000.0,
+                blended_tax_rate=0.20,
                 current_age=51,
                 withdrawal_start_age=57,
                 social_security_start_age=67,

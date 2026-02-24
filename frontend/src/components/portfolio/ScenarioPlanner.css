@@ -342,17 +342,25 @@
   line-height: 1.5;
 }
 
-.scenario-details {
+.scenario-details,
+.income-details {
   padding: 1.5rem;
   background: #f7fafc;
   border-radius: 8px;
+  margin-top: 1.5rem;
 }
 
-.scenario-details h4 {
+.scenario-details h4,
+.income-details h4 {
   margin: 0 0 1rem 0;
   color: #2d3748;
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+.income-details {
+  background: #f0fff4;
+  border: 2px solid #9ae6b4;
 }
 
 .details-grid {
@@ -370,6 +378,15 @@
   border-radius: 6px;
 }
 
+.detail-card.highlight {
+  background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+}
+
+.detail-card.highlight .detail-label,
+.detail-card.highlight .detail-value {
+  color: white;
+}
+
 .detail-label {
   font-size: 0.875rem;
   color: #718096;
@@ -380,6 +397,10 @@
   font-size: 1.25rem;
   font-weight: 700;
   color: #2b6cb0;
+}
+
+.detail-value.negative {
+  color: #e53e3e;
 }
 
 @media (max-width: 1200px) {
