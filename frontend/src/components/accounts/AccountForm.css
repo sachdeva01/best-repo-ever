@@ -84,3 +84,13 @@
 .btn-secondary:hover:not(:disabled) {
   background-color: #cbd5e0;
 }
+
+.calculated-field {
+  padding: 0.75rem;
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+}

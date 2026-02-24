@@ -1,68 +1,57 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchAccounts, createAccount, updateAccount, deleteAccount } from '../api/accounts'
+import { queryKeys } from '../api/queryKeys'
 
 export const useAccounts = () => {
-  const [accounts, setAccounts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const queryClient = useQueryClient()
 
-  const loadAccounts = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await fetchAccounts()
-      setAccounts(data)
-    } catch (err) {
-      setError(err.message || 'Failed to load accounts')
-      console.error('Error loading accounts:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const accountsQuery = useQuery({
+    queryKey: queryKeys.accounts.all,
+    queryFn: fetchAccounts,
+  })
 
-  useEffect(() => {
-    loadAccounts()
-  }, [loadAccounts])
+  const addAccountMutation = useMutation({
+    mutationFn: (accountData) => createAccount(accountData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    },
+  })
 
-  const addAccount = async (accountData) => {
-    try {
-      const newAccount = await createAccount(accountData)
-      setAccounts(prev => [...prev, newAccount])
-      return newAccount
-    } catch (err) {
-      setError(err.message || 'Failed to create account')
-      throw err
-    }
-  }
+  const editAccountMutation = useMutation({
+    mutationFn: ({ id, data }) => updateAccount(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    },
+  })
 
-  const editAccount = async (id, accountData) => {
-    try {
-      const updatedAccount = await updateAccount(id, accountData)
-      setAccounts(prev => prev.map(acc => acc.id === id ? updatedAccount : acc))
-      return updatedAccount
-    } catch (err) {
-      setError(err.message || 'Failed to update account')
-      throw err
-    }
-  }
-
-  const removeAccount = async (id) => {
-    try {
-      await deleteAccount(id)
-      setAccounts(prev => prev.filter(acc => acc.id !== id))
-    } catch (err) {
-      setError(err.message || 'Failed to delete account')
-      throw err
-    }
-  }
+  const removeAccountMutation = useMutation({
+    mutationFn: (id) => deleteAccount(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.accounts.all })
+      const previous = queryClient.getQueryData(queryKeys.accounts.all)
+      queryClient.setQueryData(queryKeys.accounts.all, (old) =>
+        old?.filter((acc) => acc.id !== id)
+      )
+      return { previous }
+    },
+    onError: (_err, _id, context) => {
+      queryClient.setQueryData(queryKeys.accounts.all, context.previous)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    },
+  })
 
   return {
-    accounts,
-    loading,
-    error,
-    loadAccounts,
-    addAccount,
-    editAccount,
-    removeAccount
+    accounts: accountsQuery.data ?? [],
+    loading: accountsQuery.isLoading,
+    error: accountsQuery.error?.message || null,
+    addAccount: addAccountMutation.mutateAsync,
+    editAccount: (id, data) => editAccountMutation.mutateAsync({ id, data }),
+    removeAccount: removeAccountMutation.mutateAsync,
+    refetchAccounts: () => queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all }),
   }
 }

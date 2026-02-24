@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { formatCurrency, formatPercentage } from '../../utils/formatters'
 import { analyzeScenario } from '../../api/scenario'
 import './ScenarioPlanner.css'
@@ -7,13 +8,27 @@ function ScenarioPlanner({ presets }) {
   const [selectedPreset, setSelectedPreset] = useState('')
   const [scenarioInput, setScenarioInput] = useState({})
   const [scenarioResult, setScenarioResult] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const analyzeMutation = useMutation({
+    mutationFn: (input) => analyzeScenario(input),
+    onSuccess: (result) => {
+      setScenarioResult(result)
+      setError(null)
+    },
+    onError: (err) => {
+      setError(err.message || 'Failed to analyze scenario. Please try again.')
+      setScenarioResult(null)
+    },
+  })
+
+  const loading = analyzeMutation.isPending
 
   const handlePresetSelect = (presetName) => {
     setSelectedPreset(presetName)
     const preset = presets.find(p => p.name === presetName)
     if (preset) {
-      setScenarioInput(preset.parameters)
+      setScenarioInput(preset.scenario)
     }
   }
 
@@ -24,22 +39,15 @@ function ScenarioPlanner({ presets }) {
     }))
   }
 
-  const handleAnalyze = async () => {
-    setLoading(true)
-    try {
-      const result = await analyzeScenario(scenarioInput)
-      setScenarioResult(result)
-    } catch (error) {
-      console.error('Failed to analyze scenario:', error)
-    } finally {
-      setLoading(false)
-    }
+  const handleAnalyze = () => {
+    analyzeMutation.mutate(scenarioInput)
   }
 
   const handleReset = () => {
     setSelectedPreset('')
     setScenarioInput({})
     setScenarioResult(null)
+    setError(null)
   }
 
   const getSuccessColor = (score) => {
@@ -192,6 +200,19 @@ function ScenarioPlanner({ presets }) {
             Reset
           </button>
         </div>
+
+        {error && (
+          <div className="error-message" style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            backgroundColor: '#fee',
+            border: '1px solid #fcc',
+            borderRadius: '4px',
+            color: '#c00'
+          }}>
+            ⚠️ {error}
+          </div>
+        )}
       </div>
 
       {scenarioResult && (

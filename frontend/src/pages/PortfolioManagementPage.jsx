@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchRebalancingAnalysis, fetchPortfolioRecommendations } from '../api/rebalancing'
 import { fetchScenarioPresets } from '../api/scenario'
+import { queryKeys } from '../api/queryKeys'
 import RebalancingAnalysis from '../components/portfolio/RebalancingAnalysis'
 import PortfolioRecommendations from '../components/portfolio/PortfolioRecommendations'
 import ScenarioPlanner from '../components/portfolio/ScenarioPlanner'
@@ -11,36 +13,33 @@ import './PortfolioManagementPage.css'
 
 function PortfolioManagementPage() {
   const [activeTab, setActiveTab] = useState('optimal')
-  const [rebalancing, setRebalancing] = useState(null)
-  const [recommendations, setRecommendations] = useState(null)
-  const [scenarioPresets, setScenarioPresets] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  const rebalancingQuery = useQuery({
+    queryKey: queryKeys.portfolio.rebalancing(),
+    queryFn: fetchRebalancingAnalysis,
+  })
 
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const recommendationsQuery = useQuery({
+    queryKey: queryKeys.portfolio.recommendations(),
+    queryFn: fetchPortfolioRecommendations,
+  })
 
-      const [rebalancingData, recommendationsData, presetsData] = await Promise.all([
-        fetchRebalancingAnalysis(),
-        fetchPortfolioRecommendations(),
-        fetchScenarioPresets()
-      ])
+  const presetsQuery = useQuery({
+    queryKey: queryKeys.scenario.presets(),
+    queryFn: fetchScenarioPresets,
+    select: (data) => data.presets || [],
+  })
 
-      setRebalancing(rebalancingData)
-      setRecommendations(recommendationsData)
-      setScenarioPresets(presetsData)
-    } catch (err) {
-      setError(err.message || 'Failed to load portfolio management data')
-      console.error('Error loading portfolio management:', err)
-    } finally {
-      setLoading(false)
-    }
+  const rebalancing = rebalancingQuery.data ?? null
+  const recommendations = recommendationsQuery.data ?? null
+  const scenarioPresets = presetsQuery.data ?? null
+  const loading = rebalancingQuery.isLoading || recommendationsQuery.isLoading || presetsQuery.isLoading
+  const error = rebalancingQuery.error?.message || recommendationsQuery.error?.message || presetsQuery.error?.message || null
+
+  const loadData = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.portfolio.all })
+    queryClient.invalidateQueries({ queryKey: queryKeys.scenario.presets() })
   }
 
   return (
@@ -100,7 +99,10 @@ function PortfolioManagementPage() {
       {error && <div className="error">{error}</div>}
 
       {loading ? (
-        <div className="loading">Loading portfolio management tools...</div>
+        <div className="loading">
+          <div className="loading-spinner"></div>
+          <p>Loading portfolio management tools...</p>
+        </div>
       ) : (
         <div className="tab-content">
           {activeTab === 'optimal' && (

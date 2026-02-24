@@ -1,29 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { fetchRecurringExpenses } from '../../api/expenseTracking'
+import { queryKeys } from '../../api/queryKeys'
 import { formatCurrency } from '../../utils/formatters'
 import './RecurringExpenses.css'
 
-function RecurringExpenses({ refreshTrigger }) {
-  const [recurring, setRecurring] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+function RecurringExpenses() {
+  const { data: recurring, isLoading: loading, error: queryError } = useQuery({
+    queryKey: queryKeys.expenses.recurring(),
+    queryFn: fetchRecurringExpenses,
+  })
 
-  useEffect(() => {
-    loadRecurringExpenses()
-  }, [refreshTrigger])
-
-  const loadRecurringExpenses = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await fetchRecurringExpenses()
-      setRecurring(data)
-    } catch (err) {
-      setError(err.message || 'Failed to load recurring expenses')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const error = queryError?.message || null
 
   const getRecurrenceLabel = (period, intervalYears) => {
     if (period === 'MULTI_YEAR' && intervalYears) {

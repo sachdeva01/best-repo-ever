@@ -12,7 +12,9 @@ class BrokerageAccount(Base):
     name = Column(String, nullable=False)
     brokerage_name = Column(String, nullable=False)  # Fidelity, Vanguard, T. Rowe Price, E*TRADE, Wealthfront
     account_type = Column(String, nullable=False)  # 401(k), Traditional IRA, Roth IRA, Taxable, HSA
-    current_balance = Column(Float, default=0.0)
+    investments = Column(Float, default=0.0)
+    cash = Column(Float, default=0.0)
+    current_balance = Column(Float, default=0.0)  # Kept for backward compatibility
     dividend_yield = Column(Float, nullable=True)  # Optional annual dividend yield as decimal (e.g., 0.035 for 3.5%)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -20,6 +22,11 @@ class BrokerageAccount(Base):
     # Relationships
     holdings = relationship("Holding", back_populates="account", cascade="all, delete-orphan")
     snapshots = relationship("AccountSnapshot", back_populates="account", cascade="all, delete-orphan")
+
+    @property
+    def total_balance(self):
+        """Computed property for total balance"""
+        return (self.investments or 0.0) + (self.cash or 0.0)
 
 
 class Holding(Base):

@@ -1,75 +1,57 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   fetchRetirementCalculation,
   fetchRetirementConfig,
   updateRetirementConfig,
   fetchRetirementProjection,
-  calculateScenario
+  calculateScenario,
 } from '../api/retirement'
+import { queryKeys } from '../api/queryKeys'
 
 export const useRetirement = () => {
-  const [calculation, setCalculation] = useState(null)
-  const [config, setConfig] = useState(null)
-  const [projection, setProjection] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const queryClient = useQueryClient()
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const calculationQuery = useQuery({
+    queryKey: queryKeys.retirement.calculation(),
+    queryFn: fetchRetirementCalculation,
+  })
 
-      const [calcData, configData, projData] = await Promise.all([
-        fetchRetirementCalculation(),
-        fetchRetirementConfig(),
-        fetchRetirementProjection()
-      ])
+  const configQuery = useQuery({
+    queryKey: queryKeys.retirement.config(),
+    queryFn: fetchRetirementConfig,
+  })
 
-      setCalculation(calcData)
-      setConfig(configData)
-      setProjection(projData)
-    } catch (err) {
-      setError(err.message || 'Failed to load retirement data')
-      console.error('Error loading retirement data:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const projectionQuery = useQuery({
+    queryKey: queryKeys.retirement.projection(),
+    queryFn: fetchRetirementProjection,
+  })
 
-  useEffect(() => {
-    loadData()
-  }, [loadData])
+  const updateConfigMutation = useMutation({
+    mutationFn: (configData) => updateRetirementConfig(configData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.retirement.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    },
+  })
 
-  const updateConfig = async (configData) => {
-    try {
-      const updatedConfig = await updateRetirementConfig(configData)
-      setConfig(updatedConfig)
-      await loadData() // Reload all data after config update
-      return updatedConfig
-    } catch (err) {
-      setError(err.message || 'Failed to update config')
-      throw err
-    }
-  }
+  const scenarioMutation = useMutation({
+    mutationFn: (scenarioParams) => calculateScenario(scenarioParams),
+  })
 
-  const runScenario = async (scenarioParams) => {
-    try {
-      const scenarioResult = await calculateScenario(scenarioParams)
-      return scenarioResult
-    } catch (err) {
-      setError(err.message || 'Failed to calculate scenario')
-      throw err
-    }
-  }
+  const loading = calculationQuery.isLoading || configQuery.isLoading || projectionQuery.isLoading
+  const error =
+    calculationQuery.error?.message ||
+    configQuery.error?.message ||
+    projectionQuery.error?.message ||
+    null
 
   return {
-    calculation,
-    config,
-    projection,
+    calculation: calculationQuery.data ?? null,
+    config: configQuery.data ?? null,
+    projection: projectionQuery.data ?? null,
     loading,
     error,
-    loadData,
-    updateConfig,
-    runScenario
+    updateConfig: updateConfigMutation.mutateAsync,
+    runScenario: scenarioMutation.mutateAsync,
   }
 }

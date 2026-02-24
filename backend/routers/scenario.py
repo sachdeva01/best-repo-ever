@@ -191,18 +191,74 @@ async def analyze_scenario(scenario: ScenarioInput, db: Session = Depends(get_db
     baseline_result = run_scenario_calculation(db, ScenarioInput())
 
     # Calculate differences
-    differences = {
-        "portfolio_value_diff": round(scenario_result["projections"]["final_portfolio_value"] - baseline_result["projections"]["final_portfolio_value"], 2),
-        "income_gap_before_ss_diff": round(scenario_result["income_analysis"]["income_gap_before_ss"] - baseline_result["income_analysis"]["income_gap_before_ss"], 2),
-        "success_score_diff": scenario_result["metrics"]["overall_success_score"] - baseline_result["metrics"]["overall_success_score"]
+    portfolio_value_diff = round(scenario_result["projections"]["final_portfolio_value"] - baseline_result["projections"]["final_portfolio_value"], 2)
+    income_gap_before_ss_diff = round(scenario_result["income_analysis"]["income_gap_before_ss"] - baseline_result["income_analysis"]["income_gap_before_ss"], 2)
+    success_score_diff = scenario_result["metrics"]["overall_success_score"] - baseline_result["metrics"]["overall_success_score"]
+
+    # Generate insights based on differences
+    insights = []
+    if abs(portfolio_value_diff) > 1000000:
+        direction = "higher" if portfolio_value_diff > 0 else "lower"
+        insights.append(f"This scenario results in a portfolio value {formatCurrency(abs(portfolio_value_diff))} {direction} than baseline.")
+
+    if scenario_result["income_analysis"]["income_sufficient_before_ss"] != baseline_result["income_analysis"]["income_sufficient_before_ss"]:
+        if scenario_result["income_analysis"]["income_sufficient_before_ss"]:
+            insights.append("This scenario achieves income sufficiency before Social Security (improved from baseline).")
+        else:
+            insights.append("Warning: This scenario results in insufficient income before Social Security.")
+
+    if success_score_diff > 0:
+        insights.append(f"Overall success probability improved by {success_score_diff} points compared to baseline.")
+    elif success_score_diff < 0:
+        insights.append(f"Overall success probability decreased by {abs(success_score_diff)} points compared to baseline.")
+
+    # Generate recommendations
+    recommendations = []
+    recommendation_text = generate_scenario_recommendation(scenario_result, {"portfolio_value_diff": portfolio_value_diff})
+
+    if scenario_result["metrics"]["overall_success_score"] < 80:
+        if scenario_result["income_analysis"]["income_gap_before_ss"] > 0:
+            recommendations.append("Consider increasing portfolio yield or reducing expenses to close the income gap.")
+        if not scenario_result["projections"]["target_met"]:
+            recommendations.append("Consider delaying retirement or increasing contribution rate to meet target portfolio value.")
+        if scenario_result["inputs"]["portfolio_growth_rate"] > 0.07:
+            recommendations.append("Growth rate assumptions may be optimistic. Consider stress-testing with more conservative rates.")
+
+    # Transform to frontend expected format
+    return {
+        "success_score": scenario_result["metrics"]["overall_success_score"],
+        "comparison": {
+            "baseline": {
+                "net_worth": baseline_result["inputs"]["portfolio_value"],
+                "annual_income": baseline_result["income_analysis"]["annual_dividend_income"],
+                "required_yield": baseline_result["income_analysis"]["expenses_at_withdrawal"] / baseline_result["inputs"]["portfolio_value"] if baseline_result["inputs"]["portfolio_value"] > 0 else 0,
+                "income_sufficient": baseline_result["income_analysis"]["income_sufficient_before_ss"],
+                "on_track": baseline_result["projections"]["target_met"]
+            },
+            "scenario": {
+                "net_worth": scenario_result["inputs"]["portfolio_value"],
+                "annual_income": scenario_result["income_analysis"]["annual_dividend_income"],
+                "required_yield": scenario_result["income_analysis"]["expenses_at_withdrawal"] / scenario_result["inputs"]["portfolio_value"] if scenario_result["inputs"]["portfolio_value"] > 0 else 0,
+                "income_sufficient": scenario_result["income_analysis"]["income_sufficient_before_ss"],
+                "on_track": scenario_result["projections"]["target_met"]
+            }
+        },
+        "insights": insights,
+        "recommendations": recommendations if recommendations else [recommendation_text],
+        "scenario_details": {
+            "portfolio_value": scenario_result["inputs"]["portfolio_value"],
+            "portfolio_yield": scenario_result["inputs"]["portfolio_yield"],
+            "portfolio_growth_rate": scenario_result["inputs"]["portfolio_growth_rate"],
+            "years_to_withdrawal": scenario_result["timeline"]["years_to_withdrawal"],
+            "years_in_retirement": scenario_result["timeline"]["years_in_retirement"],
+            "inflation_rate": scenario_result["inputs"]["inflation_rate"]
+        }
     }
 
-    return {
-        "scenario": scenario_result,
-        "baseline": baseline_result,
-        "differences": differences,
-        "recommendation": generate_scenario_recommendation(scenario_result, differences)
-    }
+
+def formatCurrency(value):
+    """Helper to format currency for insights"""
+    return f"${abs(value):,.0f}"
 
 
 def generate_scenario_recommendation(result: dict, differences: dict) -> str:

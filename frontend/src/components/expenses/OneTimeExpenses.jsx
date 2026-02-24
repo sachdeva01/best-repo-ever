@@ -1,30 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { fetchOneTimeExpenses } from '../../api/expenseTracking'
+import { queryKeys } from '../../api/queryKeys'
 import { formatCurrency } from '../../utils/formatters'
 import './OneTimeExpenses.css'
 
-function OneTimeExpenses({ refreshTrigger }) {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+function OneTimeExpenses() {
   const [upcomingYears, setUpcomingYears] = useState(5)
 
-  useEffect(() => {
-    loadOneTimeExpenses()
-  }, [refreshTrigger, upcomingYears])
+  const { data, isLoading: loading, error: queryError } = useQuery({
+    queryKey: queryKeys.expenses.oneTime(upcomingYears),
+    queryFn: () => fetchOneTimeExpenses(upcomingYears),
+  })
 
-  const loadOneTimeExpenses = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await fetchOneTimeExpenses(upcomingYears)
-      setData(result)
-    } catch (err) {
-      setError(err.message || 'Failed to load one-time expenses')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const error = queryError?.message || null
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {

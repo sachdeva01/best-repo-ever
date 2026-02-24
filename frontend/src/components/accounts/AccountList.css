@@ -104,8 +104,43 @@
 
 .account-details {
   display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.account-breakdown {
+  display: flex;
   gap: 1.5rem;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.breakdown-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.breakdown-label {
+  font-size: 0.85rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.breakdown-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.breakdown-item.total .breakdown-label {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.breakdown-item.total .breakdown-value {
+  font-size: 1.25rem;
+  color: #2b6cb0;
 }
 
 .account-balance {

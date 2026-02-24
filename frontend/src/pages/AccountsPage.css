@@ -51,6 +51,20 @@
   color: #2b6cb0;
 }
 
+.stat-card.highlight {
+  background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+  border: 2px solid #2b6cb0;
+}
+
+.stat-card.highlight .stat-label {
+  color: #e2e8f0;
+}
+
+.stat-card.highlight .stat-value {
+  color: #ffffff;
+  font-size: 1.75rem;
+}
+
 .page-actions {
   margin-bottom: 1.5rem;
 }

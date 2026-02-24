@@ -1,40 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { fetchMonthlyAnalytics, fetchDetailedSummary } from '../../api/expenseTracking'
+import { queryKeys } from '../../api/queryKeys'
 import { formatCurrency } from '../../utils/formatters'
 import './ExpenseAnalytics.css'
 
-function ExpenseAnalytics({ refreshTrigger }) {
-  const [monthlyData, setMonthlyData] = useState(null)
-  const [detailedSummary, setDetailedSummary] = useState(null)
+function ExpenseAnalytics() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    loadAnalytics()
-  }, [refreshTrigger, selectedYear])
+  const startOfYear = `${selectedYear}-01-01`
+  const endOfYear = `${selectedYear}-12-31`
 
-  const loadAnalytics = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const { data: monthlyData, isLoading: monthlyLoading, error: monthlyError } = useQuery({
+    queryKey: queryKeys.expenses.monthlyAnalytics(selectedYear),
+    queryFn: () => fetchMonthlyAnalytics(selectedYear),
+  })
 
-      const startOfYear = `${selectedYear}-01-01`
-      const endOfYear = `${selectedYear}-12-31`
+  const { data: detailedSummary, isLoading: detailedLoading, error: detailedError } = useQuery({
+    queryKey: queryKeys.expenses.detailedSummary(startOfYear, endOfYear),
+    queryFn: () => fetchDetailedSummary(startOfYear, endOfYear),
+  })
 
-      const [monthly, detailed] = await Promise.all([
-        fetchMonthlyAnalytics(selectedYear),
-        fetchDetailedSummary(startOfYear, endOfYear)
-      ])
-
-      setMonthlyData(monthly)
-      setDetailedSummary(detailed)
-    } catch (err) {
-      setError(err.message || 'Failed to load analytics')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const loading = monthlyLoading || detailedLoading
+  const error = monthlyError?.message || detailedError?.message || null
 
   const getTopCategories = () => {
     if (!detailedSummary || !detailedSummary.category_breakdown) return []

@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { fetchTotalAnnualExpenses } from '../api/expenseTracking'
+import { queryKeys } from '../api/queryKeys'
 import { formatCurrency } from '../utils/formatters'
 import ExpenseEntry from '../components/expenses/ExpenseEntry'
 import ExpenseList from '../components/expenses/ExpenseList'
@@ -10,30 +12,11 @@ import './ExpenseTrackerPage.css'
 
 function ExpenseTrackerPage() {
   const [activeTab, setActiveTab] = useState('entry')
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [totalAnnual, setTotalAnnual] = useState(null)
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadTotalAnnual()
-  }, [refreshTrigger])
-
-  const loadTotalAnnual = async () => {
-    try {
-      setLoading(true)
-      const data = await fetchTotalAnnualExpenses()
-      setTotalAnnual(data)
-    } catch (err) {
-      console.error('Failed to load total annual expenses:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleExpenseAdded = () => {
-    // Trigger refresh of other components
-    setRefreshTrigger(prev => prev + 1)
-  }
+  const { data: totalAnnual, isLoading: loading } = useQuery({
+    queryKey: queryKeys.expenses.totalAnnual(),
+    queryFn: fetchTotalAnnualExpenses,
+  })
 
   return (
     <div className="expense-tracker-page">
@@ -91,19 +74,19 @@ function ExpenseTrackerPage() {
 
       <div className="tab-content">
         {activeTab === 'entry' && (
-          <ExpenseEntry onExpenseAdded={handleExpenseAdded} />
+          <ExpenseEntry />
         )}
         {activeTab === 'list' && (
-          <ExpenseList refreshTrigger={refreshTrigger} />
+          <ExpenseList />
         )}
         {activeTab === 'recurring' && (
-          <RecurringExpenses refreshTrigger={refreshTrigger} />
+          <RecurringExpenses />
         )}
         {activeTab === 'onetime' && (
-          <OneTimeExpenses refreshTrigger={refreshTrigger} />
+          <OneTimeExpenses />
         )}
         {activeTab === 'analytics' && (
-          <ExpenseAnalytics refreshTrigger={refreshTrigger} />
+          <ExpenseAnalytics />
         )}
       </div>
     </div>

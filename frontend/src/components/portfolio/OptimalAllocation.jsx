@@ -1,62 +1,46 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatCurrency, formatPercentage } from '../../utils/formatters'
 import { fetchPortfolioAllocation, implementPortfolioAllocation, fetchHistoricalPerformance } from '../../api/portfolioAllocation'
+import { queryKeys } from '../../api/queryKeys'
 import './OptimalAllocation.css'
 
 function OptimalAllocation() {
-  const [allocation, setAllocation] = useState(null)
-  const [historical, setHistorical] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [implementing, setImplementing] = useState(false)
-  const [error, setError] = useState(null)
+  const queryClient = useQueryClient()
   const [showHistorical, setShowHistorical] = useState(false)
 
-  useEffect(() => {
-    loadAllocation()
-    loadHistoricalData()
-  }, [])
+  const { data: allocation, isLoading: loading, error: allocationError } = useQuery({
+    queryKey: queryKeys.portfolio.allocation(),
+    queryFn: fetchPortfolioAllocation,
+  })
 
-  const loadAllocation = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await fetchPortfolioAllocation()
-      setAllocation(data)
-    } catch (err) {
-      setError(err.message || 'Failed to load allocation')
-      console.error('Error loading allocation:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data: historical } = useQuery({
+    queryKey: queryKeys.portfolio.historicalPerformance(),
+    queryFn: fetchHistoricalPerformance,
+  })
 
-  const loadHistoricalData = async () => {
-    try {
-      const data = await fetchHistoricalPerformance()
-      setHistorical(data)
-    } catch (err) {
-      console.error('Error loading historical data:', err)
-      // Don't show error to user, historical data is optional
-    }
-  }
+  const error = allocationError?.message || null
 
-  const handleImplement = async () => {
+  const implementMutation = useMutation({
+    mutationFn: implementPortfolioAllocation,
+    onSuccess: () => {
+      alert('Portfolio allocation implemented successfully!')
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolio.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    },
+    onError: (err) => {
+      alert('Failed to implement allocation: ' + err.message)
+    },
+  })
+
+  const implementing = implementMutation.isPending
+
+  const handleImplement = () => {
     if (!window.confirm('This will replace your current holdings with the recommended allocation. Continue?')) {
       return
     }
-
-    try {
-      setImplementing(true)
-      await implementPortfolioAllocation()
-      alert('Portfolio allocation implemented successfully!')
-      // Reload allocation to show updated data
-      await loadAllocation()
-    } catch (err) {
-      alert('Failed to implement allocation: ' + err.message)
-      console.error('Error implementing allocation:', err)
-    } finally {
-      setImplementing(false)
-    }
+    implementMutation.mutate()
   }
 
   if (loading) {

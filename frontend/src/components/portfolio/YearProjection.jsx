@@ -1,29 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { fetchYearProjection } from '../../api/yearProjection'
+import { queryKeys } from '../../api/queryKeys'
 import './YearProjection.css'
 
 function YearProjection() {
-  const [projection, setProjection] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { data: projection, isLoading: loading, error: queryError } = useQuery({
+    queryKey: queryKeys.yearProjection.all,
+    queryFn: fetchYearProjection,
+    staleTime: 5 * 60 * 1000,
+  })
 
-  useEffect(() => {
-    loadProjection()
-  }, [])
-
-  const loadProjection = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await fetchYearProjection()
-      setProjection(data)
-    } catch (err) {
-      setError(err.message || 'Failed to load year projection')
-      console.error('Error loading projection:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const error = queryError?.message || null
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {

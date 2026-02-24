@@ -8,7 +8,7 @@ import RefreshButton from '../components/dashboard/RefreshButton'
 import './DashboardPage.css'
 
 function DashboardPage() {
-  const { quickStats, allocation, marketData, expectedReturns, incomeComparison, retirementConfig, loading, error, loadData } = useDashboard()
+  const { quickStats, allocation, marketData, expectedReturns, incomeComparison, retirementConfig, loading, error, refetch } = useDashboard()
 
   return (
     <div className="dashboard-page">
@@ -17,7 +17,7 @@ function DashboardPage() {
           <h2>Dashboard</h2>
           <p className="page-subtitle">Portfolio overview and key retirement metrics</p>
         </div>
-        <RefreshButton onRefresh={loadData} />
+        <RefreshButton onRefresh={refetch} />
       </div>
 
       {error && <div className="error">{error}</div>}

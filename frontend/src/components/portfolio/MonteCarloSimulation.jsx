@@ -1,30 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { fetchMonteCarloSimulation } from '../../api/monteCarlo'
+import { queryKeys } from '../../api/queryKeys'
 import './MonteCarloSimulation.css'
 
 function MonteCarloSimulation() {
-  const [simulation, setSimulation] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [numSimulations, setNumSimulations] = useState(1000)
+  const [numSimulations] = useState(1000)
 
-  useEffect(() => {
-    loadSimulation()
-  }, [])
+  const { data: simulation, isLoading: loading, error: queryError } = useQuery({
+    queryKey: queryKeys.monteCarlo.simulation(numSimulations),
+    queryFn: () => fetchMonteCarloSimulation(numSimulations),
+    staleTime: 5 * 60 * 1000,
+  })
 
-  const loadSimulation = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await fetchMonteCarloSimulation(numSimulations)
-      setSimulation(data)
-    } catch (err) {
-      setError(err.message || 'Failed to load Monte Carlo simulation')
-      console.error('Error loading simulation:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const error = queryError?.message || null
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {

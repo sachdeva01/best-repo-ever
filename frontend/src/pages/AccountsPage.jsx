@@ -6,7 +6,7 @@ import { formatCurrency } from '../utils/formatters'
 import './AccountsPage.css'
 
 function AccountsPage() {
-  const { accounts, loading, error, addAccount, editAccount, removeAccount, loadAccounts } = useAccounts()
+  const { accounts, loading, error, addAccount, editAccount, removeAccount, refetchAccounts } = useAccounts()
   const [showForm, setShowForm] = useState(false)
   const [editingAccount, setEditingAccount] = useState(null)
 
@@ -47,7 +47,9 @@ function AccountsPage() {
     setEditingAccount(null)
   }
 
-  const totalNetWorth = accounts.reduce((sum, acc) => sum + (acc.current_balance || 0), 0)
+  const totalInvestments = accounts.reduce((sum, acc) => sum + (acc.investments || 0), 0)
+  const totalCash = accounts.reduce((sum, acc) => sum + (acc.cash || 0), 0)
+  const totalNetWorth = totalInvestments + totalCash
 
   return (
     <div className="accounts-page">
@@ -58,6 +60,14 @@ function AccountsPage() {
         </div>
         <div className="header-stats">
           <div className="stat-card">
+            <span className="stat-label">Total Investments</span>
+            <span className="stat-value">{formatCurrency(totalInvestments)}</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Total Cash</span>
+            <span className="stat-value">{formatCurrency(totalCash)}</span>
+          </div>
+          <div className="stat-card highlight">
             <span className="stat-label">Total Net Worth</span>
             <span className="stat-value">{formatCurrency(totalNetWorth)}</span>
           </div>
@@ -100,7 +110,7 @@ function AccountsPage() {
           accounts={accounts}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onRefresh={loadAccounts}
+          onRefresh={refetchAccounts}
         />
       )}
     </div>

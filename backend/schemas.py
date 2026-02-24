@@ -11,18 +11,24 @@ class AccountBase(BaseModel):
 
 
 class AccountCreate(AccountBase):
-    current_balance: float = 0.0
+    investments: float = 0.0
+    cash: float = 0.0
+    current_balance: Optional[float] = None  # Kept for backward compatibility
     dividend_yield: Optional[float] = None
 
 
 class AccountUpdate(BaseModel):
     name: Optional[str] = None
-    current_balance: Optional[float] = None
+    investments: Optional[float] = None
+    cash: Optional[float] = None
+    current_balance: Optional[float] = None  # Kept for backward compatibility
     dividend_yield: Optional[float] = None
 
 
 class AccountResponse(AccountBase):
     id: int
+    investments: float
+    cash: float
     current_balance: float
     dividend_yield: Optional[float]
     created_at: datetime

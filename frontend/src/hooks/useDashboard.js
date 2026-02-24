@@ -1,60 +1,72 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchQuickStats, fetchAssetAllocation } from '../api/dashboard'
 import { fetchMarketData } from '../api/marketData'
 import { fetchExpectedReturns, fetchIncomeComparison } from '../api/expectedReturns'
 import { fetchRetirementConfig } from '../api/retirement'
+import { queryKeys } from '../api/queryKeys'
 
 export const useDashboard = () => {
-  const [quickStats, setQuickStats] = useState(null)
-  const [allocation, setAllocation] = useState(null)
-  const [marketData, setMarketData] = useState(null)
-  const [expectedReturns, setExpectedReturns] = useState(null)
-  const [incomeComparison, setIncomeComparison] = useState(null)
-  const [retirementConfig, setRetirementConfig] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const queryClient = useQueryClient()
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const quickStatsQuery = useQuery({
+    queryKey: queryKeys.dashboard.quickStats(),
+    queryFn: fetchQuickStats,
+  })
 
-      const [statsData, allocationData, marketDataResponse, expectedReturnsData, comparisonData, configData] = await Promise.all([
-        fetchQuickStats(),
-        fetchAssetAllocation(),
-        fetchMarketData(),
-        fetchExpectedReturns(),
-        fetchIncomeComparison(),
-        fetchRetirementConfig()
-      ])
+  const allocationQuery = useQuery({
+    queryKey: queryKeys.dashboard.allocation(),
+    queryFn: fetchAssetAllocation,
+  })
 
-      setQuickStats(statsData)
-      setAllocation(allocationData)
-      setMarketData(marketDataResponse)
-      setExpectedReturns(expectedReturnsData)
-      setIncomeComparison(comparisonData)
-      setRetirementConfig(configData)
-    } catch (err) {
-      setError(err.message || 'Failed to load dashboard data')
-      console.error('Error loading dashboard:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const marketDataQuery = useQuery({
+    queryKey: queryKeys.marketData.all,
+    queryFn: fetchMarketData,
+    staleTime: 30 * 1000,
+  })
 
-  useEffect(() => {
-    loadData()
-  }, [loadData])
+  const expectedReturnsQuery = useQuery({
+    queryKey: queryKeys.expectedReturns.all,
+    queryFn: fetchExpectedReturns,
+  })
+
+  const incomeComparisonQuery = useQuery({
+    queryKey: queryKeys.expectedReturns.income(),
+    queryFn: fetchIncomeComparison,
+  })
+
+  const retirementConfigQuery = useQuery({
+    queryKey: queryKeys.retirement.config(),
+    queryFn: fetchRetirementConfig,
+  })
+
+  const queries = [
+    quickStatsQuery,
+    allocationQuery,
+    marketDataQuery,
+    expectedReturnsQuery,
+    incomeComparisonQuery,
+    retirementConfigQuery,
+  ]
+
+  const loading = queries.some((q) => q.isLoading)
+  const error = queries.find((q) => q.error)?.error?.message || null
+
+  const refetch = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    queryClient.invalidateQueries({ queryKey: queryKeys.marketData.all })
+    queryClient.invalidateQueries({ queryKey: queryKeys.expectedReturns.all })
+    queryClient.invalidateQueries({ queryKey: queryKeys.retirement.config() })
+  }
 
   return {
-    quickStats,
-    allocation,
-    marketData,
-    expectedReturns,
-    incomeComparison,
-    retirementConfig,
+    quickStats: quickStatsQuery.data ?? null,
+    allocation: allocationQuery.data ?? null,
+    marketData: marketDataQuery.data ?? null,
+    expectedReturns: expectedReturnsQuery.data ?? null,
+    incomeComparison: incomeComparisonQuery.data ?? null,
+    retirementConfig: retirementConfigQuery.data ?? null,
     loading,
     error,
-    loadData
+    refetch,
   }
 }

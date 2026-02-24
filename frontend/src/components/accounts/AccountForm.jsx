@@ -7,7 +7,8 @@ function AccountForm({ account, onSubmit, onCancel }) {
     name: '',
     brokerage_name: '',
     account_type: '',
-    current_balance: '',
+    investments: '',
+    cash: '',
     dividend_yield: ''
   })
   const [errors, setErrors] = useState({})
@@ -19,7 +20,8 @@ function AccountForm({ account, onSubmit, onCancel }) {
         name: account.name || '',
         brokerage_name: account.brokerage_name || '',
         account_type: account.account_type || '',
-        current_balance: account.current_balance || '',
+        investments: account.investments || '',
+        cash: account.cash || '',
         dividend_yield: account.dividend_yield ? (account.dividend_yield * 100).toFixed(2) : ''
       })
     }
@@ -40,8 +42,20 @@ function AccountForm({ account, onSubmit, onCancel }) {
       newErrors.account_type = 'Account type is required'
     }
 
-    if (!formData.current_balance || formData.current_balance <= 0) {
-      newErrors.current_balance = 'Valid balance is required'
+    const investments = parseFloat(formData.investments) || 0
+    const cash = parseFloat(formData.cash) || 0
+
+    if (investments < 0) {
+      newErrors.investments = 'Investments cannot be negative'
+    }
+
+    if (cash < 0) {
+      newErrors.cash = 'Cash cannot be negative'
+    }
+
+    if (investments === 0 && cash === 0) {
+      newErrors.investments = 'At least one field must have a value'
+      newErrors.cash = 'At least one field must have a value'
     }
 
     if (formData.dividend_yield && (formData.dividend_yield < 0 || formData.dividend_yield > 100)) {
@@ -73,7 +87,8 @@ function AccountForm({ account, onSubmit, onCancel }) {
         name: formData.name.trim(),
         brokerage_name: formData.brokerage_name,
         account_type: formData.account_type,
-        current_balance: parseFloat(formData.current_balance),
+        investments: parseFloat(formData.investments) || 0,
+        cash: parseFloat(formData.cash) || 0,
         dividend_yield: formData.dividend_yield ? parseFloat(formData.dividend_yield) / 100 : null
       }
 
@@ -85,7 +100,8 @@ function AccountForm({ account, onSubmit, onCancel }) {
           name: '',
           brokerage_name: '',
           account_type: '',
-          current_balance: '',
+          investments: '',
+          cash: '',
           dividend_yield: ''
         })
       }
@@ -147,19 +163,42 @@ function AccountForm({ account, onSubmit, onCancel }) {
       </div>
 
       <div className="form-group">
-        <label htmlFor="current_balance">Current Balance *</label>
+        <label htmlFor="investments">Investments *</label>
         <input
           type="number"
-          id="current_balance"
-          name="current_balance"
-          value={formData.current_balance}
+          id="investments"
+          name="investments"
+          value={formData.investments}
           onChange={handleChange}
           placeholder="0.00"
           step="0.01"
           min="0"
-          className={errors.current_balance ? 'error' : ''}
+          className={errors.investments ? 'error' : ''}
         />
-        {errors.current_balance && <span className="error-message">{errors.current_balance}</span>}
+        {errors.investments && <span className="error-message">{errors.investments}</span>}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="cash">Cash *</label>
+        <input
+          type="number"
+          id="cash"
+          name="cash"
+          value={formData.cash}
+          onChange={handleChange}
+          placeholder="0.00"
+          step="0.01"
+          min="0"
+          className={errors.cash ? 'error' : ''}
+        />
+        {errors.cash && <span className="error-message">{errors.cash}</span>}
+      </div>
+
+      <div className="form-group">
+        <label>Total Balance</label>
+        <div className="calculated-field">
+          {((parseFloat(formData.investments) || 0) + (parseFloat(formData.cash) || 0)).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+        </div>
       </div>
 
       <div className="form-group">

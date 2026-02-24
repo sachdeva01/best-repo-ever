@@ -1,76 +1,60 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchExpenseCategories, createExpense } from '../../api/expenseTracking'
+import { queryKeys } from '../../api/queryKeys'
 import './ExpenseEntry.css'
 
-function ExpenseEntry({ onExpenseAdded }) {
-  const [categories, setCategories] = useState([])
-  const [formData, setFormData] = useState({
-    category_id: '',
-    amount: '',
-    description: '',
-    expense_date: new Date().toISOString().split('T')[0],
-    expense_type: 'HOUSEHOLD',
-    is_recurring: false,
-    recurrence_period: 'MONTHLY',
-    recurrence_interval_years: ''
-  })
-  const [loading, setLoading] = useState(false)
+const INITIAL_FORM = {
+  category_id: '',
+  amount: '',
+  description: '',
+  expense_date: new Date().toISOString().split('T')[0],
+  expense_type: 'HOUSEHOLD',
+  is_recurring: false,
+  recurrence_period: 'MONTHLY',
+  recurrence_interval_years: ''
+}
+
+function ExpenseEntry() {
+  const queryClient = useQueryClient()
+  const [formData, setFormData] = useState(INITIAL_FORM)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
 
-  useEffect(() => {
-    loadCategories()
-  }, [])
+  const { data: categories = [] } = useQuery({
+    queryKey: queryKeys.expenses.categories(),
+    queryFn: fetchExpenseCategories,
+  })
 
-  const loadCategories = async () => {
-    try {
-      const data = await fetchExpenseCategories()
-      setCategories(data)
-    } catch (err) {
-      console.error('Error loading categories:', err)
-    }
-  }
+  const createMutation = useMutation({
+    mutationFn: (data) => createExpense(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.all })
+      setSuccess(true)
+      setFormData({ ...INITIAL_FORM, expense_date: new Date().toISOString().split('T')[0] })
+      setTimeout(() => setSuccess(false), 3000)
+    },
+    onError: (err) => {
+      setError(err.message || 'Failed to create expense')
+    },
+  })
 
-  const handleSubmit = async (e) => {
+  const loading = createMutation.isPending
+
+  const handleSubmit = (e) => {
     e.preventDefault()
-    setLoading(true)
     setError(null)
     setSuccess(false)
 
-    try {
-      const expenseData = {
-        ...formData,
-        category_id: parseInt(formData.category_id),
-        amount: parseFloat(formData.amount),
-        expense_date: new Date(formData.expense_date).toISOString(),
-        recurrence_interval_years: formData.recurrence_interval_years ? parseInt(formData.recurrence_interval_years) : null
-      }
-
-      await createExpense(expenseData)
-      setSuccess(true)
-
-      // Reset form
-      setFormData({
-        category_id: '',
-        amount: '',
-        description: '',
-        expense_date: new Date().toISOString().split('T')[0],
-        expense_type: 'HOUSEHOLD',
-        is_recurring: false,
-        recurrence_period: 'MONTHLY',
-        recurrence_interval_years: ''
-      })
-
-      if (onExpenseAdded) {
-        onExpenseAdded()
-      }
-
-      setTimeout(() => setSuccess(false), 3000)
-    } catch (err) {
-      setError(err.message || 'Failed to create expense')
-    } finally {
-      setLoading(false)
+    const expenseData = {
+      ...formData,
+      category_id: parseInt(formData.category_id),
+      amount: parseFloat(formData.amount),
+      expense_date: new Date(formData.expense_date).toISOString(),
+      recurrence_interval_years: formData.recurrence_interval_years ? parseInt(formData.recurrence_interval_years) : null
     }
+
+    createMutation.mutate(expenseData)
   }
 
   const handleChange = (e) => {

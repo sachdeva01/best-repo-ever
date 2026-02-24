@@ -1,42 +1,33 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchExpenses, fetchExpenseCategories, deleteExpense, updateExpense } from '../../api/expenseTracking'
+import { queryKeys } from '../../api/queryKeys'
 import { formatCurrency } from '../../utils/formatters'
 import './ExpenseList.css'
 
-function ExpenseList({ refreshTrigger }) {
-  const [expenses, setExpenses] = useState([])
-  const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+function ExpenseList() {
+  const queryClient = useQueryClient()
   const [filters, setFilters] = useState({
     category_id: '',
     start_date: '',
     end_date: ''
   })
+  const [appliedFilters, setAppliedFilters] = useState(filters)
   const [editingExpense, setEditingExpense] = useState(null)
   const [editForm, setEditForm] = useState(null)
-  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    loadData()
-  }, [refreshTrigger])
+  const { data: expenses = [], isLoading: expensesLoading, error: expensesError } = useQuery({
+    queryKey: queryKeys.expenses.list(appliedFilters),
+    queryFn: () => fetchExpenses(appliedFilters),
+  })
 
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const [expensesData, categoriesData] = await Promise.all([
-        fetchExpenses(filters),
-        fetchExpenseCategories()
-      ])
-      setExpenses(expensesData)
-      setCategories(categoriesData)
-    } catch (err) {
-      setError(err.message || 'Failed to load expenses')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data: categories = [] } = useQuery({
+    queryKey: queryKeys.expenses.categories(),
+    queryFn: fetchExpenseCategories,
+  })
+
+  const loading = expensesLoading
+  const error = expensesError?.message || null
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target
@@ -44,12 +35,13 @@ function ExpenseList({ refreshTrigger }) {
   }
 
   const handleApplyFilters = () => {
-    loadData()
+    setAppliedFilters(filters)
   }
 
   const handleClearFilters = () => {
-    setFilters({ category_id: '', start_date: '', end_date: '' })
-    setTimeout(() => loadData(), 0)
+    const cleared = { category_id: '', start_date: '', end_date: '' }
+    setFilters(cleared)
+    setAppliedFilters(cleared)
   }
 
   const handleEdit = (expense) => {
@@ -79,39 +71,38 @@ function ExpenseList({ refreshTrigger }) {
     }))
   }
 
-  const handleSaveEdit = async () => {
-    try {
-      setSaving(true)
-      const updateData = {
-        ...editForm,
-        category_id: parseInt(editForm.category_id),
-        amount: parseFloat(editForm.amount),
-        recurrence_interval_years: editForm.recurrence_interval_years ? parseInt(editForm.recurrence_interval_years) : null
-      }
-
-      await updateExpense(editingExpense.id, updateData)
-
-      // Refresh the list
-      await loadData()
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateExpense(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.all })
       handleCancelEdit()
-    } catch (err) {
-      alert('Failed to update expense: ' + err.message)
-    } finally {
-      setSaving(false)
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteExpense(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.all })
+    },
+  })
+
+  const saving = updateMutation.isPending
+
+  const handleSaveEdit = () => {
+    const updateData = {
+      ...editForm,
+      category_id: parseInt(editForm.category_id),
+      amount: parseFloat(editForm.amount),
+      recurrence_interval_years: editForm.recurrence_interval_years ? parseInt(editForm.recurrence_interval_years) : null
     }
+    updateMutation.mutate({ id: editingExpense.id, data: updateData })
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     if (!window.confirm('Are you sure you want to delete this expense?')) {
       return
     }
-
-    try {
-      await deleteExpense(id)
-      setExpenses(prev => prev.filter(e => e.id !== id))
-    } catch (err) {
-      alert('Failed to delete expense: ' + err.message)
-    }
+    deleteMutation.mutate(id)
   }
 
   const getCategoryName = (categoryId) => {

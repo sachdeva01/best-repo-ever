@@ -92,9 +92,20 @@ function AccountList({ accounts, onEdit, onDelete, onRefresh }) {
                       <span className="account-type-badge">{account.account_type}</span>
                     </div>
                     <div className="account-details">
-                      <span className="account-balance">
-                        {formatCurrency(account.current_balance)}
-                      </span>
+                      <div className="account-breakdown">
+                        <span className="breakdown-item">
+                          <span className="breakdown-label">Investments:</span>
+                          <span className="breakdown-value">{formatCurrency(account.investments || 0)}</span>
+                        </span>
+                        <span className="breakdown-item">
+                          <span className="breakdown-label">Cash:</span>
+                          <span className="breakdown-value">{formatCurrency(account.cash || 0)}</span>
+                        </span>
+                        <span className="breakdown-item total">
+                          <span className="breakdown-label">Total:</span>
+                          <span className="breakdown-value">{formatCurrency(account.current_balance)}</span>
+                        </span>
+                      </div>
                       {account.dividend_yield && (
                         <span className="account-yield">
                           Yield: {formatPercentage(account.dividend_yield * 100)}

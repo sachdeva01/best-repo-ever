@@ -1,59 +1,36 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchExpenseCategories, updateExpenseCategory, getExpenseSummary } from '../api/expenses'
+import { queryKeys } from '../api/queryKeys'
 
 export const useExpenseCategories = () => {
-  const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [summary, setSummary] = useState(null)
+  const queryClient = useQueryClient()
 
-  const loadCategories = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await fetchExpenseCategories()
-      setCategories(data)
-    } catch (err) {
-      setError(err.message || 'Failed to load expense categories')
-      console.error('Error loading categories:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const categoriesQuery = useQuery({
+    queryKey: queryKeys.expenses.categories(),
+    queryFn: fetchExpenseCategories,
+  })
 
-  const loadSummary = useCallback(async () => {
-    try {
-      const data = await getExpenseSummary()
-      setSummary(data)
-    } catch (err) {
-      console.error('Error loading expense summary:', err)
-    }
-  }, [])
+  const summaryQuery = useQuery({
+    queryKey: queryKeys.expenses.summary(),
+    queryFn: getExpenseSummary,
+  })
 
-  useEffect(() => {
-    loadCategories()
-    loadSummary()
-  }, [loadCategories, loadSummary])
+  const updateCategoryMutation = useMutation({
+    mutationFn: ({ id, data }) => updateExpenseCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.retirement.all })
+    },
+  })
 
-  const updateCategory = async (id, categoryData) => {
-    try {
-      const updatedCategory = await updateExpenseCategory(id, categoryData)
-      setCategories(prev => prev.map(cat => cat.id === id ? updatedCategory : cat))
-      await loadSummary()
-      return updatedCategory
-    } catch (err) {
-      setError(err.message || 'Failed to update category')
-      throw err
-    }
-  }
+  const updateCategory = (id, data) => updateCategoryMutation.mutateAsync({ id, data })
 
   return {
-    categories,
-    summary,
-    loading,
-    error,
-    loadCategories,
-    loadSummary,
-    updateCategory
+    categories: categoriesQuery.data ?? [],
+    summary: summaryQuery.data ?? null,
+    loading: categoriesQuery.isLoading,
+    error: categoriesQuery.error?.message || null,
+    updateCategory,
   }
 }

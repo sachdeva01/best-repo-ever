@@ -14,11 +14,18 @@ router = APIRouter()
 @router.post("/accounts", response_model=AccountResponse)
 async def create_account(account: AccountCreate, db: Session = Depends(get_db)):
     """Create a new brokerage account"""
+    # Calculate current_balance as sum of investments and cash
+    investments = account.investments or 0.0
+    cash = account.cash or 0.0
+    current_balance = investments + cash
+
     db_account = BrokerageAccount(
         name=account.name,
         brokerage_name=account.brokerage_name,
         account_type=account.account_type,
-        current_balance=account.current_balance,
+        investments=investments,
+        cash=cash,
+        current_balance=current_balance,
         dividend_yield=account.dividend_yield
     )
     db.add(db_account)
@@ -57,10 +64,15 @@ async def update_account(
     # Update only provided fields
     if account_update.name is not None:
         account.name = account_update.name
-    if account_update.current_balance is not None:
-        account.current_balance = account_update.current_balance
+    if account_update.investments is not None:
+        account.investments = account_update.investments
+    if account_update.cash is not None:
+        account.cash = account_update.cash
     if account_update.dividend_yield is not None:
         account.dividend_yield = account_update.dividend_yield
+
+    # Update current_balance as sum of investments and cash
+    account.current_balance = (account.investments or 0.0) + (account.cash or 0.0)
 
     db.commit()
     db.refresh(account)
