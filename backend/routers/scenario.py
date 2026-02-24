@@ -360,14 +360,82 @@ async def get_scenario_presets(db: Session = Depends(get_db)):
     gross_income_57 = portfolio_at_57 * blended_yield_57
     net_income_57 = gross_income_57 * 0.80  # After 20% tax
 
+    # OPTION 1: Pure yield increase strategy
+    portfolio_option1 = portfolio_at_53
+    yield_option1 = 0.0318  # 3.18% yield needed
+    gross_income_option1 = portfolio_option1 * yield_option1
+    net_income_option1 = gross_income_option1 * 0.80
+
+    # OPTION 2: Balanced approach - add $500K more + modest yield increase
+    investments_balanced = (total_investments + 750000) * (1.08 ** 2)  # $750K total instead of $250K
+    cash_balanced = total_cash * ((1 + weighted_cash_yield) ** 2)
+    portfolio_balanced = investments_balanced + cash_balanced
+    yield_balanced = 0.0303  # 3.03% yield needed
+    gross_income_balanced = portfolio_balanced * yield_balanced
+    net_income_balanced = gross_income_balanced * 0.80
+
+    # OPTION 3: Pure investment strategy - add $1.45M total
+    investments_pure = (total_investments + 1451456) * (1.08 ** 2)
+    cash_pure = total_cash * ((1 + weighted_cash_yield) ** 2)
+    portfolio_pure = investments_pure + cash_pure
+    # Recalculate blended yield with new amounts
+    yield_pure = (investments_pure * 0.025 + cash_pure * weighted_cash_yield) / portfolio_pure
+    gross_income_pure = portfolio_pure * yield_pure
+    net_income_pure = gross_income_pure * 0.80
+
     presets = [
         {
-            "name": "🎯 Retire at 53 (+$250K)",
-            "description": f"Target: $320K gross income. Portfolio: ${portfolio_at_53:,.0f} → Gross: ${gross_income_53:,.0f}, Net (20% tax): ${net_income_53:,.0f}",
+            "name": "🎯 Retire at 53 - Current Plan (+$250K)",
+            "description": f"Falls SHORT of target. Portfolio: ${portfolio_at_53:,.0f} → Gross: ${gross_income_53:,.0f} (Need $320K)",
             "scenario": ScenarioInput(
                 portfolio_value=round(portfolio_at_53, 2),
                 portfolio_yield=round(blended_yield_53, 4),
-                portfolio_growth_rate=0.065,  # Blended growth rate
+                portfolio_growth_rate=0.065,
+                target_gross_income=320000.0,
+                blended_tax_rate=0.20,
+                current_age=51,
+                withdrawal_start_age=53,
+                social_security_start_age=67,
+                target_age=90
+            )
+        },
+        {
+            "name": "✅ Option 1: Increase Yield to 3.18%",
+            "description": f"Keep portfolio ${portfolio_option1:,.0f}, boost yield to 3.18%. Gross: ${gross_income_option1:,.0f} ✓",
+            "scenario": ScenarioInput(
+                portfolio_value=round(portfolio_option1, 2),
+                portfolio_yield=round(yield_option1, 4),
+                portfolio_growth_rate=0.065,
+                target_gross_income=320000.0,
+                blended_tax_rate=0.20,
+                current_age=51,
+                withdrawal_start_age=53,
+                social_security_start_age=67,
+                target_age=90
+            )
+        },
+        {
+            "name": "✅ Option 2: Add $500K + 3.03% Yield (RECOMMENDED)",
+            "description": f"Balanced approach. Portfolio: ${portfolio_balanced:,.0f} at 3.03% → Gross: ${gross_income_balanced:,.0f} ✓",
+            "scenario": ScenarioInput(
+                portfolio_value=round(portfolio_balanced, 2),
+                portfolio_yield=round(yield_balanced, 4),
+                portfolio_growth_rate=0.065,
+                target_gross_income=320000.0,
+                blended_tax_rate=0.20,
+                current_age=51,
+                withdrawal_start_age=53,
+                social_security_start_age=67,
+                target_age=90
+            )
+        },
+        {
+            "name": "✅ Option 3: Add $1.45M (No Yield Change)",
+            "description": f"Pure investment strategy. Portfolio: ${portfolio_pure:,.0f} → Gross: ${gross_income_pure:,.0f} ✓",
+            "scenario": ScenarioInput(
+                portfolio_value=round(portfolio_pure, 2),
+                portfolio_yield=round(yield_pure, 4),
+                portfolio_growth_rate=0.065,
                 target_gross_income=320000.0,
                 blended_tax_rate=0.20,
                 current_age=51,
