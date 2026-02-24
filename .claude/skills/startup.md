@@ -3,11 +3,12 @@
 Start the application with both servers running and fresh market data loaded.
 
 ## What this does
-1. Starts FastAPI backend on port 8000
-2. Starts React frontend on port 5173
-3. Waits for backend to be ready
-4. Automatically refreshes all market data
-5. Updates portfolio allocation with latest ETF prices and yields
+1. Syncs with GitHub (pulls latest, pushes any uncommitted changes)
+2. Starts FastAPI backend on port 8000
+3. Starts React frontend on port 5173
+4. Waits for backend to be ready
+5. Automatically refreshes all market data
+6. Updates portfolio allocation with latest ETF prices and yields
 
 ## Usage
 Invoke with: `/startup`
@@ -19,6 +20,43 @@ This is your one-command startup for a complete dev session with fresh data.
 ```bash
 echo "🚀 Starting Portfolio Tracker with Fresh Market Data"
 echo "===================================================="
+echo ""
+
+# Sync with GitHub first
+echo "0️⃣  Syncing with GitHub..."
+git fetch origin > /dev/null 2>&1
+
+BEHIND=$(git rev-list --count HEAD..origin/main 2>/dev/null || echo "0")
+AHEAD=$(git rev-list --count origin/main..HEAD 2>/dev/null || echo "0")
+
+if [ "$BEHIND" -gt 0 ]; then
+    echo "   📥 Pulling $BEHIND commit(s) from GitHub..."
+    git pull origin main --rebase > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "   ✅ Repository updated"
+    else
+        echo "   ⚠️  Pull failed. Continuing anyway..."
+    fi
+fi
+
+if [ -n "$(git status --porcelain)" ]; then
+    echo "   📝 Uncommitted changes detected - committing..."
+    git add . > /dev/null 2>&1
+    git commit -m "Auto-commit before startup" > /dev/null 2>&1
+    AHEAD=$(git rev-list --count origin/main..HEAD 2>/dev/null || echo "0")
+fi
+
+if [ "$AHEAD" -gt 0 ]; then
+    echo "   📤 Pushing $AHEAD commit(s) to GitHub..."
+    git push origin main > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "   ✅ Changes backed up to GitHub"
+    else
+        echo "   ⚠️  Push failed. Changes remain local."
+    fi
+fi
+
+echo "   ✅ GitHub sync complete"
 echo ""
 
 # Check if ports are already in use
@@ -145,11 +183,13 @@ echo "💡 Tip: Market data is cached for 15 minutes. Run /refresh-market-data t
 
 ## Notes
 - This is your primary startup command for daily work
+- **Automatically syncs with GitHub first** to ensure you're working with latest code
 - Combines server startup with automatic data refresh
 - Backend initializes first, then frontend, then data loads
 - Waits for backend to be ready before fetching data
 - Fresh ETF prices, yields, and historical returns loaded on startup
 - All 15 ETFs in optimal allocation updated automatically
+- Safe to run multiple times - checks if servers are already running
 
 ## What Gets Refreshed
 - **Market Indicators:** 10-year Treasury, S&P 500, Nasdaq
