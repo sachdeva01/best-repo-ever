@@ -460,20 +460,71 @@ async def get_scenario_presets(db: Session = Depends(get_db)):
             )
         },
         {
-            "name": "🎯 TWO-SLEEVE STRATEGY - Retire at 57 (SPREADSHEET)",
-            "description": f"Income Sleeve $7.5M @ 4% + Growth Sleeve $4.4M @ 4%. $300K/yr income, surplus reinvested. Ends at $39.6M!",
+            "name": "🎯 TWO-SLEEVE @ 53 - Balanced 4.5% Yield (RECOMMENDED)",
+            "description": "Retire at 53! Income: $7.1M @ 4.5%, Growth: $3.0M. Add $750K total. Ends at $49.1M - BEST option!",
             "scenario": ScenarioInput(
-                portfolio_value=11876690.0,  # From spreadsheet
-                portfolio_yield=0.04,  # 4% yield from income sleeve
-                portfolio_growth_rate=0.04,  # 4% growth rate
-                target_gross_income=300000.0,  # Target $300K (not $320K in this strategy)
+                portfolio_value=10118677.0,
+                portfolio_yield=0.045,  # 4.5% balanced yield
+                portfolio_growth_rate=0.04,
+                target_gross_income=320000.0,
+                blended_tax_rate=0.20,
+                current_age=51,
+                withdrawal_start_age=53,
+                social_security_start_age=67,
+                target_age=90,
+                annual_expenses=225000.0,
+                target_portfolio_value=49080902.0
+            )
+        },
+        {
+            "name": "🎯 TWO-SLEEVE @ 53 - Aggressive 5% Yield",
+            "description": "Retire at 53 with high yield! Income: $6.4M @ 5%, Growth: $3.7M. Add $750K. Ends at $54.8M!",
+            "scenario": ScenarioInput(
+                portfolio_value=10118677.0,
+                portfolio_yield=0.05,  # 5% aggressive yield
+                portfolio_growth_rate=0.04,
+                target_gross_income=320000.0,
+                blended_tax_rate=0.20,
+                current_age=51,
+                withdrawal_start_age=53,
+                social_security_start_age=67,
+                target_age=90,
+                annual_expenses=225000.0,
+                target_portfolio_value=54792651.0
+            )
+        },
+        {
+            "name": "🎯 TWO-SLEEVE @ 54 - Balanced 4.5% Yield",
+            "description": "Retire at 54! Income: $7.1M @ 4.5%, Growth: $3.4M. Add $750K over 3 yrs. Ends at $48.6M!",
+            "scenario": ScenarioInput(
+                portfolio_value=10508224.0,
+                portfolio_yield=0.045,
+                portfolio_growth_rate=0.04,
+                target_gross_income=320000.0,
+                blended_tax_rate=0.20,
+                current_age=51,
+                withdrawal_start_age=54,
+                social_security_start_age=67,
+                target_age=90,
+                annual_expenses=225000.0,
+                target_portfolio_value=48625102.0
+            )
+        },
+        {
+            "name": "🎯 TWO-SLEEVE @ 57 - Conservative 4% (SPREADSHEET)",
+            "description": "Income: $7.5M @ 4%, Growth: $4.4M. Add $900K over 6 yrs. $300K/yr income. Ends at $39.6M.",
+            "scenario": ScenarioInput(
+                portfolio_value=11876690.0,
+                portfolio_yield=0.04,
+                portfolio_growth_rate=0.04,
+                target_gross_income=300000.0,
                 blended_tax_rate=0.20,
                 current_age=51,
                 withdrawal_start_age=57,
                 social_security_start_age=67,
                 target_age=90,
-                annual_expenses=225000.0,  # From spreadsheet
-                target_portfolio_value=39602033.0  # Ending portfolio from spreadsheet
+                annual_expenses=225000.0,
+                target_portfolio_value=39602033.0
             )
         },
         {
