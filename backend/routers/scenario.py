@@ -445,7 +445,7 @@ async def get_scenario_presets(db: Session = Depends(get_db)):
             )
         },
         {
-            "name": "🎯 Retire at 57 (+$600K)",
+            "name": "🎯 Retire at 57 (+$600K) - Original Plan",
             "description": f"Target: $320K gross income. Portfolio: ${portfolio_at_57:,.0f} → Gross: ${gross_income_57:,.0f}, Net (20% tax): ${net_income_57:,.0f}",
             "scenario": ScenarioInput(
                 portfolio_value=round(portfolio_at_57, 2),
@@ -457,6 +457,23 @@ async def get_scenario_presets(db: Session = Depends(get_db)):
                 withdrawal_start_age=57,
                 social_security_start_age=67,
                 target_age=90
+            )
+        },
+        {
+            "name": "🎯 TWO-SLEEVE STRATEGY - Retire at 57 (SPREADSHEET)",
+            "description": f"Income Sleeve $7.5M @ 4% + Growth Sleeve $4.4M @ 4%. $300K/yr income, surplus reinvested. Ends at $39.6M!",
+            "scenario": ScenarioInput(
+                portfolio_value=11876690.0,  # From spreadsheet
+                portfolio_yield=0.04,  # 4% yield from income sleeve
+                portfolio_growth_rate=0.04,  # 4% growth rate
+                target_gross_income=300000.0,  # Target $300K (not $320K in this strategy)
+                blended_tax_rate=0.20,
+                current_age=51,
+                withdrawal_start_age=57,
+                social_security_start_age=67,
+                target_age=90,
+                annual_expenses=225000.0,  # From spreadsheet
+                target_portfolio_value=39602033.0  # Ending portfolio from spreadsheet
             )
         },
         {
