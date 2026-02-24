@@ -282,10 +282,68 @@ async def get_scenario_presets(db: Session = Depends(get_db)):
     accounts = db.query(BrokerageAccount).all()
     current_net_worth = sum(acc.current_balance for acc in accounts)
 
+    # Calculate split portfolio values
+    total_investments = sum(acc.investments or 0 for acc in accounts)
+    total_cash = sum(acc.cash or 0 for acc in accounts)
+
+    # Calculate weighted cash yield
+    cash_accounts = [acc for acc in accounts if (acc.cash or 0) > 0 and acc.dividend_yield]
+    if cash_accounts:
+        weighted_cash_yield = sum(acc.cash * acc.dividend_yield for acc in cash_accounts) / sum(acc.cash for acc in cash_accounts)
+    else:
+        weighted_cash_yield = 0.0365  # Default 3.65%
+
     categories = db.query(ExpenseCategory).all()
     annual_expenses = sum(cat.annual_amount for cat in categories)
 
+    # Scenario 1: Retire at 53 with $250K added to investments
+    # Years to grow: 2 (from age 51 to 53)
+    investments_at_53 = (total_investments + 250000) * (1.08 ** 2)
+    cash_at_53 = total_cash * ((1 + weighted_cash_yield) ** 2)
+    portfolio_at_53 = investments_at_53 + cash_at_53
+
+    # Calculate blended yield at 53
+    # Investments portion yield (assuming ~2.5% dividend on investments)
+    investment_yield_53 = 0.025
+    cash_yield_53 = weighted_cash_yield
+    blended_yield_53 = (investments_at_53 * investment_yield_53 + cash_at_53 * cash_yield_53) / portfolio_at_53
+
+    # Scenario 2: Retire at 57 with $600K added to investments
+    # Years to grow: 6 (from age 51 to 57)
+    investments_at_57 = (total_investments + 600000) * (1.08 ** 6)
+    cash_at_57 = total_cash * ((1 + weighted_cash_yield) ** 6)
+    portfolio_at_57 = investments_at_57 + cash_at_57
+
+    # Calculate blended yield at 57
+    blended_yield_57 = (investments_at_57 * investment_yield_53 + cash_at_57 * cash_yield_53) / portfolio_at_57
+
     presets = [
+        {
+            "name": "🎯 Retire at 53 (+$250K)",
+            "description": f"Retire at 53 with $250K added. Portfolio: ${portfolio_at_53:,.0f} (Inv: ${investments_at_53:,.0f} @ 8%, Cash: ${cash_at_53:,.0f} @ {weighted_cash_yield*100:.2f}%)",
+            "scenario": ScenarioInput(
+                portfolio_value=round(portfolio_at_53, 2),
+                portfolio_yield=round(blended_yield_53, 4),
+                portfolio_growth_rate=0.065,  # Blended growth rate
+                current_age=51,
+                withdrawal_start_age=53,
+                social_security_start_age=67,
+                target_age=90
+            )
+        },
+        {
+            "name": "🎯 Retire at 57 (+$600K)",
+            "description": f"Retire at 57 with $600K added. Portfolio: ${portfolio_at_57:,.0f} (Inv: ${investments_at_57:,.0f} @ 8%, Cash: ${cash_at_57:,.0f} @ {weighted_cash_yield*100:.2f}%)",
+            "scenario": ScenarioInput(
+                portfolio_value=round(portfolio_at_57, 2),
+                portfolio_yield=round(blended_yield_57, 4),
+                portfolio_growth_rate=0.065,  # Blended growth rate
+                current_age=51,
+                withdrawal_start_age=57,
+                social_security_start_age=67,
+                target_age=90
+            )
+        },
         {
             "name": "Conservative (3% growth, 2.5% yield)",
             "description": "Lower return assumptions for market downturns",
