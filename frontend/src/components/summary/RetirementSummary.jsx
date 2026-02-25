@@ -3,6 +3,7 @@ import { fetchTotalAnnualExpenses } from '../../api/expenseTracking'
 import { fetchAccounts } from '../../api/accounts'
 import { queryKeys } from '../../api/queryKeys'
 import { formatCurrency } from '../../utils/formatters'
+import YearByYearProjection from './YearByYearProjection'
 import './RetirementSummary.css'
 
 function RetirementSummary() {
@@ -365,6 +366,9 @@ function RetirementSummary() {
           </div>
         </div>
       </section>
+
+      {/* Year-by-Year Projection */}
+      <YearByYearProjection assumptions={assumptions} expensesByAge={expensesByAge} />
 
       {/* Key Insights */}
       <section className="summary-section insights">
