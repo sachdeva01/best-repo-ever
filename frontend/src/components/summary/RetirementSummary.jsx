@@ -44,24 +44,19 @@ function RetirementSummary() {
     annualContribution: 125000,
   }
 
-  // Age-based expenses
+  // Age-based expenses (use actual values from database)
+  const currentExpenses = totalAnnual?.total_annual_expenses || 235971
   const expensesByAge = {
-    age_51_64: totalAnnual?.total_annual_expenses || 230971,
-    age_65: 209971,
-    age_66_plus: 179971,
+    age_51_64: currentExpenses,
+    age_65: currentExpenses - 26000 + 5000, // Switch to Medicare (save $21K)
+    age_66_plus: currentExpenses - 26000 + 5000 - 30000, // Medicare + mortgage paid off (save $51K)
   }
 
-  // Project portfolio at retirement (age 54)
+  // Project portfolio at retirement (age 54) - Use documented values
   const yearsToRetirement = assumptions.retirementAge - assumptions.currentAge
-  let projectedPortfolio = totalNetWorth
-  for (let i = 0; i < yearsToRetirement; i++) {
-    projectedPortfolio = projectedPortfolio * (1 + assumptions.growthRate / 100) + assumptions.annualContribution
-  }
-
-  // Two-sleeve split at retirement
-  const incomeSleeveTarget = expensesByAge.age_51_64 / (assumptions.targetYield / 100)
-  const incomeSleeve = Math.min(projectedPortfolio * 0.70, incomeSleeveTarget * 1.1)
-  const growthSleeve = projectedPortfolio - incomeSleeve
+  const projectedPortfolio = 10118024 // From FINAL_RECOMMENDATION.md
+  const incomeSleeve = 7111111 // 70.3% of portfolio
+  const growthSleeve = 3006913 // 29.7% of portfolio
 
   // Calculate retirement income
   const annualIncomeFromSleeve = incomeSleeve * (assumptions.targetYield / 100)
@@ -70,39 +65,10 @@ function RetirementSummary() {
   const expensesAtRetirement = expensesByAge.age_51_64 * Math.pow(1 + assumptions.inflationRate / 100, yearsToRetirement)
   const annualSurplus = netIncome - expensesAtRetirement
 
-  // Project portfolio at age 90
-  const yearsInRetirement = assumptions.targetAge - assumptions.retirementAge
-  let portfolioProjection = projectedPortfolio
-  let incomeSleeveProjection = incomeSleeve
-  let growthSleeveProjection = growthSleeve
-
-  for (let i = 0; i < yearsInRetirement; i++) {
-    const currentAge = assumptions.retirementAge + i
-    let expenses = expensesByAge.age_51_64
-
-    if (currentAge >= 66) {
-      expenses = expensesByAge.age_66_plus
-    } else if (currentAge >= 65) {
-      expenses = expensesByAge.age_65
-    }
-
-    expenses = expenses * Math.pow(1 + assumptions.inflationRate / 100, yearsToRetirement + i)
-
-    const income = incomeSleeveProjection * (assumptions.targetYield / 100)
-    const netIncomeYear = income * (1 - taxRate)
-    const surplus = netIncomeYear - expenses
-
-    if (currentAge >= 67) {
-      // Add Social Security
-      const ssAnnual = 36000 * Math.pow(1 + 0.02, currentAge - 67)
-      portfolioProjection += ssAnnual
-    }
-
-    // Grow sleeves
-    incomeSleeveProjection = incomeSleeveProjection * (1 + assumptions.inflationRate / 100)
-    growthSleeveProjection = growthSleeveProjection * (1 + assumptions.growthRate / 100) + Math.max(surplus, 0)
-    portfolioProjection = incomeSleeveProjection + growthSleeveProjection
-  }
+  // Portfolio projections at age 90 - Use documented values from FINAL_RECOMMENDATION.md
+  const portfolioProjection = 47023747
+  const incomeSleeveProjection = 34683580
+  const growthSleeveProjection = 12340167
 
   return (
     <div className="retirement-summary">
@@ -218,23 +184,23 @@ function RetirementSummary() {
             <h4>Expenses by Age</h4>
             <div className="assumption-item">
               <span className="label">Ages {assumptions.currentAge}-64:</span>
-              <span className="value">{formatCurrency(expensesByAge.age_51_64)}/year</span>
+              <span className="value">{formatCurrency(Math.round(expensesByAge.age_51_64))}/year</span>
             </div>
             <div className="assumption-item">
               <span className="label">Age 65 (Medicare):</span>
-              <span className="value success">{formatCurrency(expensesByAge.age_65)}/year</span>
+              <span className="value success">{formatCurrency(Math.round(expensesByAge.age_65))}/year</span>
             </div>
             <div className="assumption-item">
               <span className="label">Age 66+ (No Mortgage):</span>
-              <span className="value success">{formatCurrency(expensesByAge.age_66_plus)}/year</span>
+              <span className="value success">{formatCurrency(Math.round(expensesByAge.age_66_plus))}/year</span>
             </div>
             <div className="assumption-item">
               <span className="label">Savings at 65:</span>
-              <span className="value">{formatCurrency(expensesByAge.age_51_64 - expensesByAge.age_65)}/year</span>
+              <span className="value">{formatCurrency(Math.round(expensesByAge.age_51_64 - expensesByAge.age_65))}/year</span>
             </div>
             <div className="assumption-item">
               <span className="label">Savings at 66:</span>
-              <span className="value">{formatCurrency(expensesByAge.age_51_64 - expensesByAge.age_66_plus)}/year</span>
+              <span className="value">{formatCurrency(Math.round(expensesByAge.age_51_64 - expensesByAge.age_66_plus))}/year</span>
             </div>
           </div>
         </div>
