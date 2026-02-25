@@ -64,7 +64,7 @@ TARGET_ALLOCATION = {
 
 # Cache for ETF yields to avoid repeated API calls
 _yield_cache = {}
-_CACHE_DURATION = 3600  # 1 hour in seconds
+_CACHE_DURATION = 86400  # 24 hours (1 day) in seconds
 
 # Static fallback yields for fast loading
 STATIC_YIELDS = {
