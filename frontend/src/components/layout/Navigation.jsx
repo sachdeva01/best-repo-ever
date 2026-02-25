@@ -11,6 +11,12 @@ function Navigation() {
         Dashboard
       </NavLink>
       <NavLink
+        to="/summary"
+        className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+      >
+        📊 Summary
+      </NavLink>
+      <NavLink
         to="/accounts"
         className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
       >

@@ -6,6 +6,7 @@ import ExpensesPage from './pages/ExpensesPage'
 import ExpenseTrackerPage from './pages/ExpenseTrackerPage'
 import RetirementPage from './pages/RetirementPage'
 import PortfolioManagementPage from './pages/PortfolioManagementPage'
+import SummaryPage from './pages/SummaryPage'
 import './App.css'
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="expense-tracker" element={<ExpenseTrackerPage />} />
           <Route path="retirement" element={<RetirementPage />} />
           <Route path="portfolio-management" element={<PortfolioManagementPage />} />
+          <Route path="summary" element={<SummaryPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
