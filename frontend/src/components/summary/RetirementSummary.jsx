@@ -6,15 +6,39 @@ import { formatCurrency } from '../../utils/formatters'
 import './RetirementSummary.css'
 
 function RetirementSummary() {
-  const { data: accounts = [] } = useQuery({
+  const { data: accounts = [], isLoading: accountsLoading, error: accountsError } = useQuery({
     queryKey: queryKeys.accounts.all,
     queryFn: fetchAccounts,
   })
 
-  const { data: totalAnnual } = useQuery({
+  const { data: totalAnnual, isLoading: expensesLoading, error: expensesError } = useQuery({
     queryKey: queryKeys.expenses.totalAnnual(),
     queryFn: fetchTotalAnnualExpenses,
   })
+
+  // Show loading state
+  if (accountsLoading || expensesLoading) {
+    return (
+      <div className="retirement-summary">
+        <div className="loading-state">
+          <h2>Loading retirement summary...</h2>
+          <p>Fetching portfolio and expense data</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (accountsError || expensesError) {
+    return (
+      <div className="retirement-summary">
+        <div className="error-state">
+          <h2>Error loading data</h2>
+          <p>{accountsError?.message || expensesError?.message}</p>
+        </div>
+      </div>
+    )
+  }
 
   // Calculate portfolio totals
   const totalInvestments = accounts.reduce((sum, acc) => sum + (acc.investments || 0), 0)
