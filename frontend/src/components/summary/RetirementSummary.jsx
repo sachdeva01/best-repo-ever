@@ -90,6 +90,7 @@ function RetirementSummary() {
   const annualSurplus = netIncome - expensesAtRetirement
 
   // Portfolio projections at age 90 - Use documented values from FINAL_RECOMMENDATION.md
+  const yearsInRetirement = assumptions.targetAge - assumptions.retirementAge
   const portfolioProjection = 47023747
   const incomeSleeveProjection = 34683580
   const growthSleeveProjection = 12340167
