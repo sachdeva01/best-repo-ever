@@ -57,35 +57,35 @@ function RetirementSummary() {
   // Assumptions from the retirement plan
   const assumptions = {
     currentAge: 51,
-    retirementAge: 54,
+    retirementAge: 55,  // Updated to age 55
     socialSecurityAge: 67,
     targetAge: 90,
     inflationRate: 3.0,
     growthRate: 4.0,
-    cashYield: 3.5,
-    targetYield: 4.5,
+    cashYield: 3.66,  // Current cash yield (high-yield savings)
+    targetYield: 3.97,  // Target yield at retirement (two-sleeve strategy)
     contributionsNeeded: 375000,
     contributionPeriod: 3,
     annualContribution: 125000,
   }
 
   // Age-based expenses (use actual values from database)
-  const currentExpenses = totalAnnual?.total_annual_expenses || 235971
+  const currentExpenses = totalAnnual?.total_annual_expenses || 241027
   const expensesByAge = {
     age_51_64: currentExpenses,
     age_65: currentExpenses - 26000 + 5000, // Switch to Medicare (save $21K)
     age_66_plus: currentExpenses - 26000 + 5000 - 30000, // Medicare + mortgage paid off (save $51K)
   }
 
-  // Project portfolio at retirement (age 54) - Use documented values
+  // Project portfolio at retirement (age 55) - Use documented values
   const yearsToRetirement = assumptions.retirementAge - assumptions.currentAge
-  const projectedPortfolio = 10118024 // From FINAL_RECOMMENDATION.md
-  const incomeSleeve = 7111111 // 70.3% of portfolio
-  const growthSleeve = 3006913 // 29.7% of portfolio
+  const projectedPortfolio = 10118024 // Projected value at retirement
+  const incomeSleeve = projectedPortfolio * 0.80 // 80% income sleeve
+  const growthSleeve = projectedPortfolio * 0.20 // 20% growth sleeve
 
   // Calculate retirement income
   const annualIncomeFromSleeve = incomeSleeve * (assumptions.targetYield / 100)
-  const taxRate = 0.131 // 13.1% effective tax rate due to tax-free munis
+  const taxRate = 0.246 // 24.6% effective tax rate
   const netIncome = annualIncomeFromSleeve * (1 - taxRate)
   const expensesAtRetirement = expensesByAge.age_51_64 * Math.pow(1 + assumptions.inflationRate / 100, yearsToRetirement)
   const annualSurplus = netIncome - expensesAtRetirement
@@ -131,6 +131,17 @@ function RetirementSummary() {
             <div className="metric-label">Current Annual Expenses</div>
             <div className="metric-value">{formatCurrency(expensesByAge.age_51_64)}</div>
           </div>
+        </div>
+
+        <div className="info-box" style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f0f7ff', borderLeft: '4px solid #2196F3', borderRadius: '4px' }}>
+          <strong>💡 About Portfolio Yield</strong>
+          <p style={{ margin: '8px 0 0 0', fontSize: '14px', lineHeight: '1.5' }}>
+            <strong>Current: {portfolioYield.toFixed(2)}%</strong> - Your actual yield from existing growth investments (QQQ, VUG, etc.).
+            This is intentionally low during accumulation phase (age {assumptions.currentAge}-{assumptions.retirementAge - 1}) to maximize growth.
+            <br />
+            <strong>Target at Retirement: {assumptions.targetYield}%</strong> - After rebalancing to income-focused ETFs (JEPI, SCHD, VYM) at age {assumptions.retirementAge},
+            your yield will increase to {assumptions.targetYield}% to cover living expenses.
+          </p>
         </div>
       </section>
 

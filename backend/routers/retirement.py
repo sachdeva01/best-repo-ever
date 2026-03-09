@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-from models import BrokerageAccount, ExpenseCategory, RetirementConfig, Holding, Expense
+from models import BrokerageAccount, RetirementConfig, Holding, Expense
 from schemas import (
     RetirementCalculationResponse,
     RetirementConfigUpdate,
@@ -238,11 +238,8 @@ async def get_retirement_projection(db: Session = Depends(get_db)):
     if not config:
         raise HTTPException(status_code=404, detail="Retirement config not found")
 
-    # Get annual expenses
-    categories = db.query(ExpenseCategory).all()
-    annual_expenses = config.annual_expenses_override if config.annual_expenses_override else sum(
-        cat.annual_amount for cat in categories
-    )
+    # Get annual expenses from actual expense records
+    annual_expenses = config.annual_expenses_override if config.annual_expenses_override else calculate_annual_expenses_from_actual(db)
 
     projection = []
     for year in range(config.target_age - config.current_age + 1):

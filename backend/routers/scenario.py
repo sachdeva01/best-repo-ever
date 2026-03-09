@@ -311,6 +311,121 @@ def generate_scenario_recommendation(result: dict, differences: dict) -> str:
         return "High risk scenario. Major changes required to achieve financial security in retirement."
 
 
+@router.get("/scenario/crisis")
+async def get_crisis_scenario(db: Session = Depends(get_db)):
+    """
+    Model a 2007-2008 financial crisis applied to the current portfolio.
+    Returns year-by-year impact on portfolio value, income, expenses, and cushion needed.
+    """
+    accounts = db.query(BrokerageAccount).all()
+    config = db.query(RetirementConfig).first()
+    categories = db.query(ExpenseCategory).all()
+
+    total_investments = sum(acc.investments or 0 for acc in accounts)
+    total_cash = sum(acc.cash or 0 for acc in accounts)
+    total_portfolio = total_investments + total_cash
+
+    current_age = config.current_age if config else 51
+    retirement_age = config.withdrawal_start_age if config else 55
+    inflation_rate = config.inflation_rate if config else 0.03
+    annual_expenses_today = sum(cat.annual_amount for cat in categories) if categories else 225000
+    tax_rate = 0.20
+
+    equity_yield_normal = 0.028
+    cash_yield_normal = 0.0365
+
+    # Actual S&P 500 year-by-year returns + yield/rate environment during 2007-2008 crisis
+    crisis_params = [
+        ("pre-crash",   0.055,  equity_yield_normal,        cash_yield_normal),
+        ("crash",      -0.370,  equity_yield_normal * 0.78, 0.015),
+        ("bottom",      0.265,  equity_yield_normal * 0.72, 0.002),
+        ("recovery 1",  0.151,  equity_yield_normal * 0.82, 0.002),
+        ("recovery 2",  0.021,  equity_yield_normal * 0.90, 0.002),
+        ("recovery 3",  0.160,  equity_yield_normal * 0.95, 0.003),
+        ("full recovery", 0.324, equity_yield_normal,       0.005),
+        ("post-recovery 1", 0.135, equity_yield_normal,     0.010),
+        ("post-recovery 2", 0.012, equity_yield_normal,     0.015),
+        ("post-recovery 3", 0.210, equity_yield_normal,     0.020),
+    ]
+
+    inv = total_investments
+    cash = total_cash
+    years = []
+    cumulative_cushion = 0
+    self_sufficient_age = None
+
+    for i, (phase, eq_ret, eq_yld, cash_yld) in enumerate(crisis_params):
+        age = current_age + i + 1
+        inv = inv * (1 + eq_ret)
+        portfolio = inv + cash
+
+        gross_income = (inv * eq_yld) + (cash * cash_yld)
+        net_income = gross_income * (1 - tax_rate)
+
+        yr_expenses = annual_expenses_today * ((1 + inflation_rate) ** (i + 1))
+        retired = age >= retirement_age
+        annual_gap = max(0, yr_expenses - net_income) if retired else 0
+        cumulative_cushion += annual_gap
+
+        if retired and net_income >= yr_expenses and self_sufficient_age is None:
+            self_sufficient_age = age
+
+        years.append({
+            "year": i + 1,
+            "age": age,
+            "phase": phase,
+            "retired": retired,
+            "portfolio": round(portfolio, 0),
+            "investments": round(inv, 0),
+            "cash": round(cash, 0),
+            "gross_income": round(gross_income, 0),
+            "net_income": round(net_income, 0),
+            "expenses": round(yr_expenses, 0),
+            "annual_gap": round(annual_gap, 0),
+            "cumulative_cushion": round(cumulative_cushion, 0),
+            "self_sufficient": net_income >= yr_expenses if retired else None,
+            "equity_return": eq_ret,
+            "equity_yield": round(eq_yld, 4),
+            "cash_yield": round(cash_yld, 4),
+        })
+
+        if self_sufficient_age is not None:
+            break
+
+    # Baseline at retirement (no crash)
+    years_to_retirement = retirement_age - current_age
+    baseline_portfolio = total_portfolio * ((1.06) ** years_to_retirement)
+    baseline_gross = baseline_portfolio * 0.0371
+    baseline_net = baseline_gross * (1 - tax_rate)
+    expenses_at_retirement = annual_expenses_today * ((1 + inflation_rate) ** years_to_retirement)
+
+    crash_at_retirement = next((y for y in years if y["age"] == retirement_age), None)
+
+    return {
+        "summary": {
+            "starting_portfolio": round(total_portfolio, 0),
+            "investments": round(total_investments, 0),
+            "cash": round(total_cash, 0),
+            "cash_pct": round(total_cash / total_portfolio * 100, 1) if total_portfolio > 0 else 0,
+            "current_age": current_age,
+            "retirement_age": retirement_age,
+            "total_cushion_needed": round(cumulative_cushion, 0),
+            "cushion_with_buffer": round(cumulative_cushion * 1.20, 0),
+            "cash_sufficient": total_cash >= cumulative_cushion * 1.20,
+            "remaining_cash_after": round(total_cash - cumulative_cushion, 0),
+            "self_sufficient_age": self_sufficient_age,
+        },
+        "baseline_at_retirement": {
+            "portfolio": round(baseline_portfolio, 0),
+            "gross_income": round(baseline_gross, 0),
+            "net_income": round(baseline_net, 0),
+            "expenses": round(expenses_at_retirement, 0),
+        },
+        "crash_at_retirement": crash_at_retirement,
+        "years": years,
+    }
+
+
 @router.get("/scenario/presets")
 async def get_scenario_presets(db: Session = Depends(get_db)):
     """Get pre-defined scenarios to test"""

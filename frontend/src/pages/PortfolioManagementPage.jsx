@@ -7,6 +7,7 @@ import RebalancingAnalysis from '../components/portfolio/RebalancingAnalysis'
 import PortfolioRecommendations from '../components/portfolio/PortfolioRecommendations'
 import ScenarioPlanner from '../components/portfolio/ScenarioPlanner'
 import OptimalAllocation from '../components/portfolio/OptimalAllocation'
+import BearMarketRebalancer from '../components/scenarios/BearMarketRebalancer'
 import MonteCarloSimulation from '../components/portfolio/MonteCarloSimulation'
 import YearProjection from '../components/portfolio/YearProjection'
 import './PortfolioManagementPage.css'
@@ -81,6 +82,13 @@ function PortfolioManagementPage() {
           Scenario Planner
         </button>
         <button
+          className={`tab ${activeTab === 'bear-market' ? 'active' : ''}`}
+          onClick={() => setActiveTab('bear-market')}
+        >
+          <span className="tab-icon">🐻</span>
+          Bear Market Rebalancer
+        </button>
+        <button
           className={`tab ${activeTab === 'montecarlo' ? 'active' : ''}`}
           onClick={() => setActiveTab('montecarlo')}
         >
@@ -116,6 +124,9 @@ function PortfolioManagementPage() {
           )}
           {activeTab === 'scenario' && scenarioPresets && (
             <ScenarioPlanner presets={scenarioPresets} />
+          )}
+          {activeTab === 'bear-market' && (
+            <BearMarketRebalancer />
           )}
           {activeTab === 'montecarlo' && (
             <MonteCarloSimulation />

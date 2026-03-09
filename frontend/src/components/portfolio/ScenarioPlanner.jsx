@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { formatCurrency, formatPercentage } from '../../utils/formatters'
-import { analyzeScenario } from '../../api/scenario'
+import { analyzeScenario, fetchCrisisScenario } from '../../api/scenario'
 import './ScenarioPlanner.css'
 
 function ScenarioPlanner({ presets }) {
@@ -49,6 +49,13 @@ function ScenarioPlanner({ presets }) {
     setScenarioResult(null)
     setError(null)
   }
+
+  const [crisisResult, setCrisisResult] = useState(null)
+
+  const crisisMutation = useMutation({
+    mutationFn: fetchCrisisScenario,
+    onSuccess: (result) => setCrisisResult(result),
+  })
 
   const getSuccessColor = (score) => {
     if (score >= 80) return '#48bb78'
@@ -403,6 +410,104 @@ function ScenarioPlanner({ presets }) {
           )}
         </div>
       )}
+      <div className="crisis-scenario">
+        <div className="crisis-header">
+          <div>
+            <h3>📉 2007–2008 Financial Crisis Simulation</h3>
+            <p className="crisis-subtitle">See how your portfolio survives a real market crash — year by year</p>
+          </div>
+          <button
+            className="crisis-button"
+            onClick={() => crisisMutation.mutate()}
+            disabled={crisisMutation.isPending}
+          >
+            {crisisMutation.isPending ? 'Simulating...' : '🔁 Run Crisis Simulation'}
+          </button>
+        </div>
+
+        {crisisResult && (
+          <>
+            <div className="crisis-summary-cards">
+              <div className="crisis-card">
+                <span className="crisis-card-label">Starting Portfolio</span>
+                <span className="crisis-card-value">{formatCurrency(crisisResult.summary.starting_portfolio)}</span>
+                <span className="crisis-card-sub">{crisisResult.summary.cash_pct}% in cash</span>
+              </div>
+              <div className="crisis-card">
+                <span className="crisis-card-label">Cushion Needed</span>
+                <span className="crisis-card-value crisis-warn">{formatCurrency(crisisResult.summary.total_cushion_needed)}</span>
+                <span className="crisis-card-sub">{formatCurrency(crisisResult.summary.cushion_with_buffer)} w/ 20% buffer</span>
+              </div>
+              <div className="crisis-card">
+                <span className="crisis-card-label">Your Cash Reserve</span>
+                <span className="crisis-card-value">{formatCurrency(crisisResult.summary.cash)}</span>
+                <span className={`crisis-card-sub ${crisisResult.summary.cash_sufficient ? 'crisis-ok' : 'crisis-bad'}`}>
+                  {crisisResult.summary.cash_sufficient ? '✅ Sufficient' : '❌ Not enough'}
+                </span>
+              </div>
+              <div className="crisis-card">
+                <span className="crisis-card-label">Cash Remaining After</span>
+                <span className="crisis-card-value crisis-ok">{formatCurrency(crisisResult.summary.remaining_cash_after)}</span>
+                <span className="crisis-card-sub">Self-sufficient at age {crisisResult.summary.self_sufficient_age}</span>
+              </div>
+            </div>
+
+            <div className="crisis-comparison">
+              <div className="crisis-compare-card baseline">
+                <span className="crisis-compare-label">Baseline at Retirement (Age {crisisResult.summary.retirement_age})</span>
+                <div className="crisis-compare-row"><span>Portfolio</span><strong>{formatCurrency(crisisResult.baseline_at_retirement.portfolio)}</strong></div>
+                <div className="crisis-compare-row"><span>Gross Income</span><strong>{formatCurrency(crisisResult.baseline_at_retirement.gross_income)}</strong></div>
+                <div className="crisis-compare-row"><span>Net Income</span><strong>{formatCurrency(crisisResult.baseline_at_retirement.net_income)}</strong></div>
+              </div>
+              {crisisResult.crash_at_retirement && (
+                <div className="crisis-compare-card crash">
+                  <span className="crisis-compare-label">After 2008 Crash at Retirement</span>
+                  <div className="crisis-compare-row"><span>Portfolio</span><strong>{formatCurrency(crisisResult.crash_at_retirement.portfolio)}</strong></div>
+                  <div className="crisis-compare-row"><span>Gross Income</span><strong>{formatCurrency(crisisResult.crash_at_retirement.gross_income)}</strong></div>
+                  <div className="crisis-compare-row"><span>Net Income</span><strong>{formatCurrency(crisisResult.crash_at_retirement.net_income)}</strong></div>
+                </div>
+              )}
+            </div>
+
+            <div className="crisis-table-wrap">
+              <table className="crisis-table">
+                <thead>
+                  <tr>
+                    <th>Age</th>
+                    <th>Phase</th>
+                    <th>Portfolio</th>
+                    <th>Equity Return</th>
+                    <th>Net Income</th>
+                    <th>Expenses</th>
+                    <th>Annual Gap</th>
+                    <th>Cumulative Draw</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {crisisResult.years.map((yr) => (
+                    <tr key={yr.year} className={yr.retired ? (yr.self_sufficient ? 'row-ok' : 'row-gap') : 'row-working'}>
+                      <td><strong>{yr.age}</strong>{yr.age === crisisResult.summary.retirement_age && <span className="retire-badge">RETIRE</span>}</td>
+                      <td>{yr.phase}</td>
+                      <td>{formatCurrency(yr.portfolio)}</td>
+                      <td className={yr.equity_return < 0 ? 'neg' : 'pos'}>{yr.equity_return > 0 ? '+' : ''}{(yr.equity_return * 100).toFixed(1)}%</td>
+                      <td>{formatCurrency(yr.net_income)}</td>
+                      <td>{formatCurrency(yr.expenses)}</td>
+                      <td className={yr.annual_gap > 0 ? 'neg' : ''}>{yr.annual_gap > 0 ? `-${formatCurrency(yr.annual_gap)}` : '—'}</td>
+                      <td>{yr.cumulative_cushion > 0 ? formatCurrency(yr.cumulative_cushion) : '—'}</td>
+                      <td>
+                        {!yr.retired ? <span className="badge working">Working</span>
+                          : yr.self_sufficient ? <span className="badge ok">Self-sufficient ✅</span>
+                          : <span className="badge draw">Draw from cash</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }

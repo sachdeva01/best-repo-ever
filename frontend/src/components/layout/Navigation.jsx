@@ -23,16 +23,10 @@ function Navigation() {
         Accounts
       </NavLink>
       <NavLink
-        to="/expenses"
-        className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-      >
-        Expenses
-      </NavLink>
-      <NavLink
         to="/expense-tracker"
         className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
       >
-        Expense Tracker
+        Expenses
       </NavLink>
       <NavLink
         to="/retirement"

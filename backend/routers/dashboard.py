@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from models import BrokerageAccount, Holding, AccountSnapshot, ExpenseCategory
+from models import BrokerageAccount, Holding, AccountSnapshot, Expense
 from schemas import PortfolioSummaryResponse
 from datetime import datetime, timedelta
 
@@ -191,9 +191,21 @@ async def get_quick_stats(db: Session = Depends(get_db)):
         progress_percentage = 0.0
         years_to_withdrawal = 0
 
-    # Calculate total annual expenses
-    expense_categories = db.query(ExpenseCategory).all()
-    total_annual_expenses = sum(cat.annual_amount for cat in expense_categories)
+    # Calculate total annual expenses from detailed expense records
+    from models import Expense
+    expenses = db.query(Expense).filter(Expense.is_recurring == True).all()
+
+    total_annual_expenses = 0.0
+    for expense in expenses:
+        if expense.recurrence_period == "MONTHLY":
+            total_annual_expenses += expense.amount * 12
+        elif expense.recurrence_period == "QUARTERLY":
+            total_annual_expenses += expense.amount * 4
+        elif expense.recurrence_period == "YEARLY":
+            total_annual_expenses += expense.amount
+        elif expense.recurrence_period == "MULTI_YEAR" and expense.recurrence_interval_years:
+            # Annualize multi-year expenses
+            total_annual_expenses += expense.amount / expense.recurrence_interval_years
 
     # Calculate projected net worth at withdrawal (4 years from now)
     # Includes: 6% annual growth + $20K/year reinvestment from surplus + $250K one-time contribution

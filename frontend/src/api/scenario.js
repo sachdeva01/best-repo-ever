@@ -9,3 +9,8 @@ export const fetchScenarioPresets = async () => {
   const { data } = await apiClient.get('/api/scenario/presets')
   return data
 }
+
+export const fetchCrisisScenario = async () => {
+  const { data } = await apiClient.get('/api/scenario/crisis')
+  return data
+}

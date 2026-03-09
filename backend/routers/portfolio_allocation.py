@@ -7,57 +7,41 @@ from datetime import datetime, timedelta
 
 router = APIRouter()
 
-# Target allocation with specific ETFs
+# TWO-SLEEVE STRATEGY: 80% Income Sleeve + 20% Growth Sleeve
+# Target: 4.0% blended yield (minimum needed: 3.79%)
+# Reduced JEPI/JEPQ exposure while maintaining income sufficiency
 TARGET_ALLOCATION = {
-    "Dividend Growth Stocks": {
-        "percentage": 0.30,
-        "etfs": [
-            {"symbol": "VYM", "name": "Vanguard High Dividend Yield ETF", "weight": 0.40},
-            {"symbol": "SCHD", "name": "Schwab US Dividend Equity ETF", "weight": 0.40},
-            {"symbol": "DGRO", "name": "iShares Core Dividend Growth ETF", "weight": 0.20}
-        ]
-    },
-    "High-Yield Bonds": {
-        "percentage": 0.20,
+    "Income Sleeve - Premium Income": {
+        "percentage": 0.22,  # 22% of portfolio in JEPI/JEPQ (reduced from 33%)
+        "sleeve": "income",
         "etfs": [
             {"symbol": "JEPI", "name": "JPMorgan Equity Premium Income ETF", "weight": 0.50},
             {"symbol": "JEPQ", "name": "JPMorgan Nasdaq Equity Premium Income ETF", "weight": 0.50}
         ]
     },
-    "REITs": {
-        "percentage": 0.10,
+    "Income Sleeve - Dividend Growth": {
+        "percentage": 0.38,  # 38% of portfolio in dividend stocks (increased from 32%)
+        "sleeve": "income",
         "etfs": [
-            {"symbol": "VNQ", "name": "Vanguard Real Estate ETF", "weight": 0.60},
-            {"symbol": "SCHH", "name": "Schwab US REIT ETF", "weight": 0.40}
+            {"symbol": "SCHD", "name": "Schwab US Dividend Equity ETF", "weight": 0.57},
+            {"symbol": "VYM", "name": "Vanguard High Dividend Yield ETF", "weight": 0.43}
         ]
     },
-    "Treasury/TIPS": {
-        "percentage": 0.15,
+    "Income Sleeve - Cash/T-Bills": {
+        "percentage": 0.20,  # 20% of portfolio in cash/T-bills (increased from 15%)
+        "sleeve": "income",
         "etfs": [
-            {"symbol": "TIP", "name": "iShares TIPS Bond ETF", "weight": 0.50},
-            {"symbol": "VTIP", "name": "Vanguard Short-Term Inflation-Protected Securities ETF", "weight": 0.30},
-            {"symbol": "GOVT", "name": "iShares US Treasury Bond ETF", "weight": 0.20}
+            {"symbol": "SGOV", "name": "iShares 0-3 Month Treasury Bond ETF", "weight": 1.0}
         ]
     },
-    "Preferred Stock": {
-        "percentage": 0.05,
+    "Growth Sleeve": {
+        "percentage": 0.20,  # 20% of portfolio in growth (0.75% yield, 8%+ growth target)
+        "sleeve": "growth",
         "etfs": [
-            {"symbol": "PFF", "name": "iShares Preferred and Income Securities ETF", "weight": 0.60},
-            {"symbol": "PFFD", "name": "Global X US Preferred ETF", "weight": 0.40}
-        ]
-    },
-    "Cash/Money Market": {
-        "percentage": 0.08,
-        "etfs": [
-            {"symbol": "SGOV", "name": "iShares 0-3 Month Treasury Bond ETF", "weight": 0.60},
-            {"symbol": "BIL", "name": "SPDR Bloomberg 1-3 Month T-Bill ETF", "weight": 0.40}
-        ]
-    },
-    "Growth Equities": {
-        "percentage": 0.12,
-        "etfs": [
-            {"symbol": "VOO", "name": "Vanguard S&P 500 ETF", "weight": 0.60},
-            {"symbol": "VTI", "name": "Vanguard Total Stock Market ETF", "weight": 0.40}
+            {"symbol": "QQQ", "name": "Invesco QQQ Trust (Nasdaq-100)", "weight": 0.35},
+            {"symbol": "VUG", "name": "Vanguard Growth ETF", "weight": 0.30},
+            {"symbol": "VOOG", "name": "Vanguard S&P 500 Growth ETF", "weight": 0.20},
+            {"symbol": "SCHG", "name": "Schwab US Large-Cap Growth ETF", "weight": 0.15}
         ]
     }
 }
@@ -68,13 +52,19 @@ _CACHE_DURATION = 86400  # 24 hours (1 day) in seconds
 
 # Static fallback yields for fast loading
 STATIC_YIELDS = {
+    # Income Sleeve - Premium Income
+    "JEPI": 7.2, "JEPQ": 9.0,
+    # Income Sleeve - Dividend Growth
     "SCHD": 3.9, "VYM": 3.0, "DGRO": 2.5,
-    "JEPI": 7.2, "JEPQ": 9.0, "QYLD": 12.0,
+    # Income Sleeve - Cash/T-Bills
+    "SGOV": 3.5, "BIL": 3.3,
+    # Growth Sleeve (minimal dividends)
+    "QQQ": 0.6, "VUG": 0.7, "VOOG": 1.3, "SCHG": 0.5,
+    "VOO": 1.5, "VTI": 1.6,
+    # Other
     "VNQ": 4.0, "SCHH": 4.2, "O": 5.5,
     "TIP": 2.5, "VTIP": 2.3, "GOVT": 3.8,
-    "PFF": 6.5, "PFFD": 6.8,
-    "SGOV": 3.5, "BIL": 3.3,
-    "VOO": 1.5, "VTI": 1.6,
+    "PFF": 6.5, "PFFD": 6.8, "QYLD": 12.0,
 }
 
 
@@ -149,11 +139,10 @@ def get_etf_historical_data(symbol: str, name: str) -> dict:
 
 @router.get("/portfolio-allocation/calculate")
 async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
-    """Calculate portfolio allocation with actual ETF yields"""
-    from models import RetirementConfig
+    """Calculate two-sleeve portfolio allocation with actual ETF yields"""
+    from models import RetirementConfig, Expense
 
     # Get total portfolio value from all accounts EXCEPT "Recommended Portfolio"
-    # This prevents double-counting and uses only real account balances
     accounts = db.query(BrokerageAccount).filter(
         BrokerageAccount.name != "Recommended Portfolio"
     ).all()
@@ -164,16 +153,26 @@ async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
     qualified_div_tax_rate = config.qualified_dividend_tax_rate if config else 0.15
     ordinary_income_tax_rate = config.ordinary_income_tax_rate if config else 0.30
 
+    # Calculate current annual expenses from actual expense records
+    expenses = db.query(Expense).all()
+    annual_expenses = 0.0
+    for expense in expenses:
+        if expense.is_recurring:
+            if expense.recurrence_period == "MONTHLY":
+                annual_expenses += expense.amount * 12
+            elif expense.recurrence_period == "QUARTERLY":
+                annual_expenses += expense.amount * 4
+            elif expense.recurrence_period == "YEARLY":
+                annual_expenses += expense.amount
+            elif expense.recurrence_period == "MULTI_YEAR" and expense.recurrence_interval_years:
+                annual_expenses += expense.amount / expense.recurrence_interval_years
+
     # Define tax treatment for each category
-    # qualified = qualified dividend treatment, ordinary = ordinary income treatment
     tax_treatment = {
-        "Dividend Growth Stocks": "qualified",
-        "High-Yield Bonds": "ordinary",  # JEPI/JEPQ are mostly ordinary income
-        "REITs": "ordinary",  # REITs are mostly ordinary income
-        "Treasury/TIPS": "ordinary",  # Interest income
-        "Preferred Stock": "qualified",  # Preferred dividends are mostly qualified
-        "Cash/Money Market": "ordinary",  # Interest income
-        "Growth Equities": "qualified"  # Qualified dividends
+        "Income Sleeve - Premium Income": "ordinary",  # JEPI/JEPQ mostly ordinary
+        "Income Sleeve - Dividend Growth": "qualified",  # SCHD/VYM qualified dividends
+        "Income Sleeve - Cash/T-Bills": "ordinary",  # Interest income
+        "Growth Sleeve": "qualified"  # Minimal qualified dividends
     }
 
     allocation_details = {}
@@ -181,9 +180,18 @@ async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
     total_after_tax_income = 0.0
     category_yields = {}
 
+    # Track sleeve totals
+    income_sleeve_value = 0.0
+    income_sleeve_income = 0.0
+    income_sleeve_after_tax = 0.0
+    growth_sleeve_value = 0.0
+    growth_sleeve_income = 0.0
+    growth_sleeve_after_tax = 0.0
+
     for category, details in TARGET_ALLOCATION.items():
         category_percentage = details["percentage"]
         category_value = total_portfolio_value * category_percentage
+        sleeve_type = details.get("sleeve", "income")
 
         etf_details = []
         category_total_income = 0.0
@@ -220,7 +228,7 @@ async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
                 "current_yield": round(current_yield, 2),
                 "annual_income": round(etf_annual_income, 2),
                 "after_tax_income": round(etf_after_tax_income, 2),
-                "tax_rate": round(tax_rate * 100, 0)
+                "tax_rate": round(tax_rate * 100, 1)
             })
 
         # Calculate weighted average yield for category
@@ -230,6 +238,16 @@ async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
         total_annual_income += category_total_income
         total_after_tax_income += category_after_tax_income
 
+        # Track sleeve totals
+        if sleeve_type == "income":
+            income_sleeve_value += category_value
+            income_sleeve_income += category_total_income
+            income_sleeve_after_tax += category_after_tax_income
+        else:
+            growth_sleeve_value += category_value
+            growth_sleeve_income += category_total_income
+            growth_sleeve_after_tax += category_after_tax_income
+
         allocation_details[category] = {
             "target_percentage": category_percentage * 100,
             "target_value": round(category_value, 2),
@@ -237,13 +255,18 @@ async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
             "annual_income": round(category_total_income, 2),
             "after_tax_income": round(category_after_tax_income, 2),
             "tax_treatment": tax_treatment.get(category, "ordinary"),
-            "tax_rate": round(tax_rate * 100, 0),
+            "tax_rate": round(tax_rate * 100, 1),
+            "sleeve": sleeve_type,
             "etfs": etf_details
         }
 
     # Calculate overall portfolio yield
     portfolio_yield = (total_annual_income / total_portfolio_value * 100) if total_portfolio_value > 0 else 0
     after_tax_yield = (total_after_tax_income / total_portfolio_value * 100) if total_portfolio_value > 0 else 0
+
+    # Calculate income vs expense comparison
+    after_tax_surplus = total_after_tax_income - annual_expenses
+    coverage_ratio = (total_after_tax_income / annual_expenses * 100) if annual_expenses > 0 else 0
 
     return {
         "total_portfolio_value": round(total_portfolio_value, 2),
@@ -254,8 +277,31 @@ async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
         "allocation": allocation_details,
         "category_yields": category_yields,
         "tax_rates": {
-            "qualified_dividend": round(qualified_div_tax_rate * 100, 0),
-            "ordinary_income": round(ordinary_income_tax_rate * 100, 0)
+            "qualified_dividend": round(qualified_div_tax_rate * 100, 1),
+            "ordinary_income": round(ordinary_income_tax_rate * 100, 1)
+        },
+        "sleeve_summary": {
+            "income_sleeve": {
+                "value": round(income_sleeve_value, 2),
+                "percentage": round(income_sleeve_value / total_portfolio_value * 100, 1) if total_portfolio_value > 0 else 0,
+                "annual_income": round(income_sleeve_income, 2),
+                "after_tax_income": round(income_sleeve_after_tax, 2),
+                "yield": round(income_sleeve_income / income_sleeve_value * 100, 2) if income_sleeve_value > 0 else 0
+            },
+            "growth_sleeve": {
+                "value": round(growth_sleeve_value, 2),
+                "percentage": round(growth_sleeve_value / total_portfolio_value * 100, 1) if total_portfolio_value > 0 else 0,
+                "annual_income": round(growth_sleeve_income, 2),
+                "after_tax_income": round(growth_sleeve_after_tax, 2),
+                "yield": round(growth_sleeve_income / growth_sleeve_value * 100, 2) if growth_sleeve_value > 0 else 0
+            }
+        },
+        "expense_analysis": {
+            "annual_expenses": round(annual_expenses, 2),
+            "after_tax_income": round(total_after_tax_income, 2),
+            "after_tax_surplus": round(after_tax_surplus, 2),
+            "coverage_ratio": round(coverage_ratio, 1),
+            "income_sufficient": after_tax_surplus >= 0
         }
     }
 
