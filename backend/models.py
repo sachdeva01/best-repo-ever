@@ -42,7 +42,7 @@ class Holding(Base):
     __tablename__ = "holdings"
 
     id = Column(Integer, primary_key=True, index=True)
-    account_id = Column(Integer, ForeignKey("brokerage_accounts.id"), nullable=False)
+    account_id = Column(Integer, ForeignKey("brokerage_accounts.id"), nullable=False, index=True)
     symbol = Column(String, nullable=False)
     name = Column(String, nullable=False)
     asset_type = Column(String, nullable=False)  # Stock, Bond, ETF, Mutual Fund, Cash, Other
@@ -64,9 +64,9 @@ class AccountSnapshot(Base):
     __tablename__ = "account_snapshots"
 
     id = Column(Integer, primary_key=True, index=True)
-    account_id = Column(Integer, ForeignKey("brokerage_accounts.id"), nullable=False)
+    account_id = Column(Integer, ForeignKey("brokerage_accounts.id"), nullable=False, index=True)
     balance = Column(Float, nullable=False)
-    snapshot_date = Column(DateTime(timezone=True), nullable=False)
+    snapshot_date = Column(DateTime(timezone=True), nullable=False, index=True)
     notes = Column(Text, nullable=True)
 
     # Relationships
@@ -93,7 +93,7 @@ class Expense(Base):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     expense_date = Column(DateTime(timezone=True), nullable=False)
-    is_recurring = Column(Integer, default=0)  # SQLite uses 0/1 for boolean
+    is_recurring = Column(Integer, default=0, index=True)  # SQLite uses 0/1 for boolean
     recurrence_period = Column(String, nullable=True)  # MONTHLY, QUARTERLY, YEARLY, MULTI_YEAR
     recurrence_interval_years = Column(Integer, nullable=True)  # For multi-year recurrence (e.g., 5 for every 5 years)
     expense_type = Column(String, default="HOUSEHOLD")  # HOUSEHOLD, ONE_TIME, RECURRING

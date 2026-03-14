@@ -44,11 +44,16 @@ def fetch_external_market_data(data_type: str) -> float:
         data = ticker.history(period="1d")
 
         if data.empty:
-            # Fallback to fast_info if history is empty
+            # Fallback to fast_info — must use attribute access, not .get()
+            # (.get() on LazyLoadingDict silently returns the default without fetching)
             info = ticker.fast_info
-            if data_type == "10-Year Treasury":
-                return round(info.get('last_price', 0.0), 2)
-            return round(info.get('last_price', 0.0), 2)
+            try:
+                last_price = info.last_price
+                if last_price and last_price > 0:
+                    return round(float(last_price), 2)
+            except Exception:
+                pass
+            raise ValueError(f"Empty history and no fast_info price for {data_type}")
 
         # Get the most recent close price
         latest_price = data['Close'].iloc[-1]
