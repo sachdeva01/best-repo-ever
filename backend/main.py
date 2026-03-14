@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from routers import accounts, holdings, expenses, retirement, market_data, portfolio_builder, dashboard, expected_returns, rebalancing, scenario, portfolio_allocation, monte_carlo, year_projection
+from routers import auth
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
@@ -35,6 +36,7 @@ app.include_router(scenario.router, prefix="/api", tags=["scenario"])
 app.include_router(portfolio_allocation.router, prefix="/api", tags=["portfolio-allocation"])
 app.include_router(monte_carlo.router, prefix="/api", tags=["monte-carlo"])
 app.include_router(year_projection.router, prefix="/api", tags=["year-projection"])
+app.include_router(auth.router, prefix="/api", tags=["auth"])
 
 @app.get("/")
 async def root():

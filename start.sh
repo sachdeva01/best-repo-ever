@@ -1,5 +1,5 @@
 #!/bin/bash
-APP_DIR="/Users/ssachdeva/Desktop/my-app"
+APP_DIR="/Users/ssachdeva/Documents/Claude/my-app"
 
 echo "[$(date)] Starting my-app..."
 

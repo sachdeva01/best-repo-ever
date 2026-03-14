@@ -4,6 +4,15 @@ from sqlalchemy.sql import func
 from database import Base
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False, index=True)
+    hashed_password = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 # Models
 class BrokerageAccount(Base):
     __tablename__ = "brokerage_accounts"
@@ -109,6 +118,17 @@ class RetirementConfig(Base):
     estimated_social_security_monthly = Column(Float, default=0.0)  # Monthly SS benefit estimate
     qualified_dividend_tax_rate = Column(Float, default=0.15)  # 15% for qualified dividends
     ordinary_income_tax_rate = Column(Float, default=0.30)  # 30% for ordinary income (federal + state)
+    # Income tracking
+    current_annual_income = Column(Float, default=0.0)  # Current pre-retirement earned income
+    income_growth_rate = Column(Float, default=0.03)  # Annual raise rate (should keep pace with inflation)
+    # Projection parameters (previously hardcoded)
+    expected_portfolio_return = Column(Float, default=0.06)  # Annual nominal portfolio growth rate
+    annual_reinvestment_amount = Column(Float, default=20000.0)  # Annual reinvestment amount in retirement
+    pre_retirement_lump_sum = Column(Float, default=250000.0)  # One-time contribution before withdrawal starts
+    # Two-sleeve strategy parameters
+    income_sleeve_pct = Column(Float, default=0.0)  # Fraction of portfolio in income sleeve (0 = disabled, e.g. 0.72)
+    dividend_growth_rate = Column(Float, default=0.035)  # Annual yield growth rate on income sleeve (SCHD ~8%, blended ~3.5%)
+    growth_sleeve_return = Column(Float, default=0.065)  # Annual return of growth sleeve (e.g. 6.5%)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
