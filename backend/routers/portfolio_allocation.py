@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from database import get_db
 from models import BrokerageAccount, Holding
 import yfinance as yf
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor
+from zoneinfo import ZoneInfo
 
 router = APIRouter()
+
+ET = ZoneInfo("America/New_York")
 
 # TWO-SLEEVE STRATEGY: 80% Income Sleeve + 20% Growth Sleeve
 # Target: 4.0% blended yield (minimum needed: 3.79%)
@@ -46,101 +50,114 @@ TARGET_ALLOCATION = {
     }
 }
 
-# Cache for ETF yields to avoid repeated API calls
-_yield_cache = {}
-_CACHE_DURATION = 86400  # 24 hours (1 day) in seconds
-
-# Static fallback yields for fast loading
+# Static fallback yields (used until live yields are fetched)
 STATIC_YIELDS = {
-    # Income Sleeve - Premium Income
     "JEPI": 7.2, "JEPQ": 9.0,
-    # Income Sleeve - Dividend Growth
-    "SCHD": 3.9, "VYM": 3.0, "DGRO": 2.5,
-    # Income Sleeve - Cash/T-Bills
-    "SGOV": 3.5, "BIL": 3.3,
-    # Growth Sleeve (minimal dividends)
+    "SCHD": 3.9, "VYM": 3.0,
+    "SGOV": 3.5,
     "QQQ": 0.6, "VUG": 0.7, "VOOG": 1.3, "SCHG": 0.5,
-    "VOO": 1.5, "VTI": 1.6,
-    # Other
-    "VNQ": 4.0, "SCHH": 4.2, "O": 5.5,
-    "TIP": 2.5, "VTIP": 2.3, "GOVT": 3.8,
-    "PFF": 6.5, "PFFD": 6.8, "QYLD": 12.0,
 }
+
+# Static fallback prices (used on first load before background fetch completes)
+STATIC_PRICES = {
+    "JEPI": 59.0, "JEPQ": 55.0, "SCHD": 28.0,
+    "VYM": 125.0, "SGOV": 100.5, "QQQ": 490.0,
+    "VUG": 360.0, "VOOG": 310.0, "SCHG": 105.0,
+}
+
+# Yield cache (unchanged — 24h TTL)
+_yield_cache: dict = {}
+_YIELD_CACHE_TTL = 86400
+
+# Price cache — keyed by market slot, refreshed at most twice per day
+from typing import Optional
+
+_price_cache: dict = {}
+_price_slot: Optional[str] = None
+_prices_last_fetched: Optional[datetime] = None
+
+
+def _current_slot() -> str:
+    """
+    Returns a string identifying the current market-data slot:
+      YYYY-MM-DD-am  — after 9:30 AM ET (morning prices)
+      YYYY-MM-DD-pm  — after 4:00 PM ET (closing prices)
+    Before 9:30 AM ET we use the previous day's pm slot so we
+    never trigger a fetch outside market hours.
+    """
+    now = datetime.now(ET)
+    date_str = now.strftime("%Y-%m-%d")
+    if now.hour < 9 or (now.hour == 9 and now.minute < 30):
+        yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        return f"{yesterday}-pm"
+    elif now.hour < 16:
+        return f"{date_str}-am"
+    else:
+        return f"{date_str}-pm"
+
+
+def _needs_price_refresh() -> bool:
+    return _current_slot() != _price_slot
+
+
+def _fetch_price_single(symbol: str) -> tuple:
+    try:
+        info = yf.Ticker(symbol).info
+        price = info.get("regularMarketPrice") or info.get("currentPrice")
+        return symbol, float(price) if price else STATIC_PRICES.get(symbol, 100.0)
+    except Exception:
+        return symbol, STATIC_PRICES.get(symbol, 100.0)
+
+
+def _refresh_prices_background() -> None:
+    """Fetch all ETF prices in parallel and update the cache. Runs as a background task."""
+    global _price_cache, _price_slot, _prices_last_fetched
+    all_symbols = [
+        etf["symbol"]
+        for details in TARGET_ALLOCATION.values()
+        for etf in details["etfs"]
+    ]
+    slot = _current_slot()
+    with ThreadPoolExecutor(max_workers=len(all_symbols)) as executor:
+        results = dict(executor.map(_fetch_price_single, all_symbols))
+    _price_cache.update(results)
+    _price_slot = slot
+    _prices_last_fetched = datetime.now(ET)
+    print(f"[prices] refreshed for slot {slot}: {results}")
 
 
 def get_current_yield(symbol: str) -> float:
-    """
-    Fetch current dividend yield for an ETF with caching.
-    Uses static yields for fast initial load, then caches API results.
-    """
     import time
-
-    # Check cache first
     now = time.time()
-    if symbol in _yield_cache:
-        cached_data = _yield_cache[symbol]
-        if now - cached_data['timestamp'] < _CACHE_DURATION:
-            return cached_data['yield']
-
-    # Use static yield immediately (no API call delay)
+    cached = _yield_cache.get(symbol)
+    if cached and now - cached["timestamp"] < _YIELD_CACHE_TTL:
+        return cached["yield"]
     static_yield = STATIC_YIELDS.get(symbol, 3.0)
-
-    # Return static yield for now, can fetch live data in background later
-    _yield_cache[symbol] = {'yield': static_yield, 'timestamp': now}
+    _yield_cache[symbol] = {"yield": static_yield, "timestamp": now}
     return static_yield
 
 
 def get_current_price(symbol: str) -> float:
-    """Fetch current price for an ETF"""
-    try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
-        price = info.get('regularMarketPrice', info.get('currentPrice', 0))
-        return float(price) if price else 0.0
-    except Exception as e:
-        print(f"Error fetching price for {symbol}: {e}")
-        return 0.0
-
-
-def get_annualized_return(symbol: str, years: int) -> float:
-    """Calculate annualized return over specified years"""
-    try:
-        ticker = yf.Ticker(symbol)
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=years*365)
-
-        hist = ticker.history(start=start_date, end=end_date)
-        if len(hist) < 2:
-            return None
-
-        start_price = hist['Close'].iloc[0]
-        end_price = hist['Close'].iloc[-1]
-
-        # Annualized return formula: (end/start)^(1/years) - 1
-        annualized_return = ((end_price / start_price) ** (1/years) - 1) * 100
-        return round(annualized_return, 2)
-    except Exception as e:
-        print(f"Error calculating return for {symbol} ({years} years): {e}")
-        return None
-
-
-def get_etf_historical_data(symbol: str, name: str) -> dict:
-    """Get historical returns and current yield for an ETF"""
-    return {
-        "symbol": symbol,
-        "name": name,
-        "current_yield": get_current_yield(symbol),
-        "return_3yr": get_annualized_return(symbol, 3),
-        "return_5yr": get_annualized_return(symbol, 5),
-        "return_10yr": get_annualized_return(symbol, 10),
-        "return_20yr": get_annualized_return(symbol, 20)
-    }
+    """Return cached price immediately (lazy — background task keeps it fresh)."""
+    return _price_cache.get(symbol) or STATIC_PRICES.get(symbol, 100.0)
 
 
 @router.get("/portfolio-allocation/calculate")
-async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
-    """Calculate two-sleeve portfolio allocation with actual ETF yields"""
+async def calculate_portfolio_allocation(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """
+    Returns allocation instantly using cached prices.
+    If the market-data slot has changed (i.e. it's a new AM or PM window),
+    a background task refreshes all prices in parallel via ThreadPoolExecutor
+    so the next request gets updated values.
+    """
     from models import RetirementConfig, Expense
+
+    # Trigger background price refresh if slot has changed (at most twice per day)
+    if _needs_price_refresh():
+        background_tasks.add_task(_refresh_prices_background)
 
     # Get total portfolio value from all accounts EXCEPT "Recommended Portfolio"
     accounts = db.query(BrokerageAccount).filter(
@@ -302,7 +319,10 @@ async def calculate_portfolio_allocation(db: Session = Depends(get_db)):
             "after_tax_surplus": round(after_tax_surplus, 2),
             "coverage_ratio": round(coverage_ratio, 1),
             "income_sufficient": after_tax_surplus >= 0
-        }
+        },
+        "prices_last_updated": _prices_last_fetched.isoformat() if _prices_last_fetched else None,
+        "prices_slot": _price_slot,
+        "prices_source": "live" if _prices_last_fetched else "static_fallback",
     }
 
 
@@ -423,37 +443,3 @@ async def implement_portfolio_allocation(db: Session = Depends(get_db)):
     }
 
 
-@router.get("/portfolio-allocation/historical-performance")
-async def get_historical_performance():
-    """
-    Get historical returns and current yields for all ETFs in the optimal allocation.
-    Returns 3-year, 5-year, 10-year, and 20-year annualized returns.
-    """
-    historical_data = {}
-
-    for category, details in TARGET_ALLOCATION.items():
-        etf_performance = []
-
-        for etf in details["etfs"]:
-            symbol = etf["symbol"]
-            name = etf["name"]
-
-            # Get historical data for this ETF
-            perf_data = get_etf_historical_data(symbol, name)
-            etf_performance.append(perf_data)
-
-        historical_data[category] = {
-            "etfs": etf_performance
-        }
-
-    return {
-        "historical_performance": historical_data,
-        "notes": [
-            "Returns are annualized total returns (includes price appreciation + dividends reinvested)",
-            "Yield is current trailing 12-month dividend yield",
-            "null values indicate data not available (ETF may be newer than the time period)",
-            "JEPI launched May 2020 - has ~5 years of history",
-            "JEPQ launched May 2022 - has ~3 years of history",
-            "SGOV launched Sep 2018 - has ~6 years of history"
-        ]
-    }
