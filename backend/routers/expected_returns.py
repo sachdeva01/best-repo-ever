@@ -107,7 +107,7 @@ async def get_income_comparison(db: Session = Depends(get_db)):
     """
     from models import Holding, RetirementConfig
     import sys
-    sys.path.append('/Users/ssachdeva/Desktop/my-app/backend')
+    sys.path.append('/Users/ssachdeva/Documents/Claude/my-app/backend')
     from routers.portfolio_allocation import TARGET_ALLOCATION, get_current_yield
 
     # Get current net worth

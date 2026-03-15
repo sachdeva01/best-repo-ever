@@ -1,17 +1,103 @@
 # Two-Sleeve Portfolio Strategy - Implementation Guide
 
+## ⭐ PRIMARY PLAN: Retire at Age 53
+## 🔵 BACKUP PLAN: Retire at Age 57
+
+> **Updated:** March 2026. Primary target is now age 53 based on wife's income bridge to 59, $275K annual expenses, and income-sleeve-only withdrawal rule.
+
 ## Overview
-Retire at 57 with a sophisticated two-sleeve approach that maximizes both income stability and long-term wealth growth.
+Two-sleeve approach that maximizes income stability and long-term wealth growth — with age 53 as the primary retirement target and age 57 as a conservative fallback.
 
-## Strategy Summary
+## PRIMARY Plan Summary (Age 53)
 
-**Portfolio at Retirement (Age 57):** $11,876,690
-- **Income Sleeve:** $7,500,000 (63%) - Generates $300K/year at 4% yield
-- **Growth Sleeve:** $4,376,690 (37%) - Pure growth, no withdrawals
+**Portfolio at Retirement (Age 53):** ~$9,700,000
+- **Starting portfolio today:** $8,648,000 (age 51)
+- **2 years accumulation:** +$400K savings ($200K/yr conservative) + 4% growth
+- **Income Sleeve:** ~$7,000,000 (72%) — Generates $316K gross / ~$275K net at 4.5% yield
+- **Growth Sleeve:** ~$2,700,000 (28%) — Pure growth, NO withdrawals ever
+- **Wife's income bridge:** Ages 53–59 her $700K gross covers all expenses; no portfolio drawdown in those 6 years
 
-**Key Principle:** Cap income at $300K. ALL surplus reinvested into Growth Sleeve for compounding.
+**Key Principle:** Live ONLY off income sleeve income. Never touch growth sleeve. ALL surplus reinvested into Growth Sleeve.
 
-**Result:** Portfolio grows to **$39.6M by age 90** (vs. $4.25M target)
+**Annual Expenses:** $275,000 (today's dollars, 3% inflation adjustment applied)
+
+**Result (Primary) — Total Estate at Age 90:**
+
+| Component | At Age 53 | At Age 90 | How |
+|---|---|---|---|
+| Income sleeve principal | $7.0M | ~$8–9M | Principal preserved — never spent, modest appreciation |
+| Growth sleeve | $2.7M | ~$23M (6%) / ~$38M (7%) | Compounding with zero withdrawals for 37 years |
+| **Total estate** | **$9.7M** | **~$31–47M** | Arav & Shray inherit both sleeves |
+
+> **Key insight:** Because you live only off yield, the income sleeve principal is fully intact at 90 — it passes to your sons alongside the growth sleeve. You never spend a dollar of principal.
+
+---
+
+## ⚠️ Worst Case: Wife Retires at 55 (Instead of 59)
+
+| Factor | Base Case (wife at 59) | Worst Case (wife at 55) |
+|---|---|---|
+| Income bridge duration | 6 years | 2 years |
+| Growth sleeve at start of expenses | ~$6.2M | ~$3.7M |
+| Total gap ages 55–67 (inflation eroding yield) | ~$450K | ~$1.1M |
+| Growth sleeve at 90 (6%) | ~$34M | ~$25M |
+| Income sleeve principal at 90 | ~$8–9M | ~$8–9M |
+| **Total estate at 90** | **~$41M** | **~$32M** |
+
+**Still safe** — worst case produces ~$32M estate. The ~$9M difference comes entirely from losing 4 years of surplus yield reinvestment into the growth sleeve.
+
+### ⚠️ Inflation Gap — The Key Risk to Manage
+
+With 3% inflation, expenses grow from $275K today to ~$441K by age 67. The income sleeve yield stays roughly fixed in dollar terms unless the underlying assets have **yield growth**. Gap by age 67: ~$67K/year even after Social Security.
+
+**Solution — build yield growth into the income sleeve:**
+- SCHD dividend growth: ~8%/year historically
+- VIG dividend growth: ~6–7%/year
+- Target 35–40% of income sleeve in dividend growers (not just munis)
+- Munis provide stability; dividend growers provide inflation protection
+
+A 40% allocation to SCHD/VIG/VYM within the income sleeve means yield grows ~3–4%/year, roughly matching inflation. This closes the gap without ever touching principal.
+
+---
+
+## BACKUP Plan Summary (Age 57)
+
+**Portfolio at Retirement (Age 57):** ~$12,700,000
+- **Income Sleeve:** $7,900,000 (62%) — Generates $316K gross / ~$275K net at 4% yield
+- **Growth Sleeve:** $4,800,000 (38%) — Pure growth, no withdrawals
+
+**Key Principle:** Live ONLY off income sleeve yield. Never touch principal. ALL surplus reinvested into Growth Sleeve.
+
+**Result (Backup) — Total Estate at Age 90:**
+
+| Component | At Age 57 | At Age 90 | How |
+|---|---|---|---|
+| Income sleeve principal | $7.9M | ~$9–10M | Principal preserved |
+| Growth sleeve | $4.8M | ~$36M (6%) / ~$55M (7%) | Compounding for 33 years |
+| **Total estate** | **$12.7M** | **~$45–65M** | Larger growth sleeve offsets shorter runway |
+
+---
+
+## Why Age 53 is Primary
+
+| Factor | Age 53 (Primary) ⭐ | Age 57 (Backup) 🔵 |
+|--------|---------------------|---------------------|
+| Portfolio at retirement | ~$9.7M | ~$12.7M |
+| Wife's income bridge | 6 more years (ages 53–59) | 2 more years (ages 57–59) |
+| Portfolio drawdown ages 53–59 | **Zero** (wife covers all expenses) | Zero |
+| Income sleeve | $7.0M @ 4.5% | $7.9M @ 4.0% |
+| Growth sleeve at retirement | $2.7M | $4.8M |
+| Years of retirement | 37 years | 33 years |
+| Income sleeve principal at 90 | ~$8–9M | ~$9–10M |
+| Growth sleeve at 90 (6%) | ~$23M | ~$36M |
+| **Total estate at 90 (6%)** | **~$31M** | **~$45M** |
+| Annual savings needed | $200K/yr for 2 yrs | $150K/yr for 6 yrs |
+
+**Verdict:** Age 57 produces a larger final estate due to the bigger growth sleeve — but age 53 gives you 4 extra years of retirement and the math is entirely safe. The choice is lifestyle vs. legacy maximization.
+
+---
+
+*Previous version modeled age 57 as sole scenario. Updated to reflect age 53 primary based on March 2026 planning session.*
 
 ---
 

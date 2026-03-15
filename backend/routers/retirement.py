@@ -53,15 +53,22 @@ def calculate_retirement_metrics(
         if not config:
             raise HTTPException(status_code=404, detail="Retirement config not found")
 
-    # Use scenario params if provided, otherwise use config
-    current_age = scenario_params.current_age if scenario_params and scenario_params.current_age else config.current_age
-    withdrawal_start_age = scenario_params.withdrawal_start_age if scenario_params and scenario_params.withdrawal_start_age else config.withdrawal_start_age
-    social_security_start_age = scenario_params.social_security_start_age if scenario_params and scenario_params.social_security_start_age else config.social_security_start_age
-    target_age = scenario_params.target_age if scenario_params and scenario_params.target_age else config.target_age
-    target_portfolio_value = scenario_params.target_portfolio_value if scenario_params and scenario_params.target_portfolio_value else config.target_portfolio_value
-    inflation_rate = scenario_params.inflation_rate if scenario_params and scenario_params.inflation_rate else config.inflation_rate
-    expected_dividend_yield = scenario_params.expected_dividend_yield if scenario_params and scenario_params.expected_dividend_yield else config.expected_dividend_yield
-    estimated_social_security_monthly = scenario_params.estimated_social_security_monthly if scenario_params and scenario_params.estimated_social_security_monthly else config.estimated_social_security_monthly
+    # Use scenario params if provided, otherwise fall back to config
+    def _pick(config_attr, scenario_attr=None):
+        sa = scenario_attr or config_attr
+        val = getattr(scenario_params, sa, None) if scenario_params else None
+        return val if val is not None else getattr(config, config_attr)
+
+    current_age = _pick('current_age')
+    withdrawal_start_age = _pick('withdrawal_start_age')
+    social_security_start_age = _pick('social_security_start_age')
+    target_age = _pick('target_age')
+    target_portfolio_value = _pick('target_portfolio_value')
+    inflation_rate = _pick('inflation_rate')
+    expected_dividend_yield = _pick('expected_dividend_yield')
+    estimated_social_security_monthly = _pick('estimated_social_security_monthly')
+    current_annual_income = _pick('current_annual_income')
+    income_growth_rate = _pick('income_growth_rate')
 
     # Calculate current net worth
     accounts = db.query(BrokerageAccount).all()
@@ -131,8 +138,15 @@ def calculate_retirement_metrics(
     else:
         required_annual_growth_rate = 0.0
 
-    # Status flags
-    income_sufficient_before_ss = current_annual_dividend_income >= expenses_at_55
+    # Income growth: project earned income to withdrawal start age
+    income_at_withdrawal_start = current_annual_income * ((1 + income_growth_rate) ** years_to_withdrawal)
+
+    # Total income at withdrawal start (earned + dividends) vs inflation-adjusted expenses
+    total_income_now = current_annual_income + current_annual_dividend_income
+    income_covers_expenses_now = total_income_now >= annual_expenses
+
+    # Status flags — now factor in earned income + dividends vs expenses
+    income_sufficient_before_ss = (income_at_withdrawal_start + current_annual_dividend_income) >= expenses_at_55
     income_sufficient_after_ss = current_annual_dividend_income >= net_expenses_at_67 if net_expenses_at_67 > 0 else True
 
     # Simple on-track calculation (can be enhanced)
@@ -147,6 +161,10 @@ def calculate_retirement_metrics(
         target_portfolio_value=target_portfolio_value,
         current_annual_expenses=annual_expenses,
         expenses_at_withdrawal_start=expenses_at_55,
+        current_annual_income=current_annual_income,
+        income_growth_rate=income_growth_rate,
+        income_at_withdrawal_start=income_at_withdrawal_start,
+        income_covers_expenses_now=income_covers_expenses_now,
         current_portfolio_dividend_yield=current_portfolio_dividend_yield,
         current_annual_dividend_income=current_annual_dividend_income,
         required_dividend_yield_at_55=required_dividend_yield_at_55,
@@ -225,6 +243,22 @@ async def update_retirement_config(
         config.qualified_dividend_tax_rate = config_update.qualified_dividend_tax_rate
     if config_update.ordinary_income_tax_rate is not None:
         config.ordinary_income_tax_rate = config_update.ordinary_income_tax_rate
+    if config_update.current_annual_income is not None:
+        config.current_annual_income = config_update.current_annual_income
+    if config_update.income_growth_rate is not None:
+        config.income_growth_rate = config_update.income_growth_rate
+    if config_update.expected_portfolio_return is not None:
+        config.expected_portfolio_return = config_update.expected_portfolio_return
+    if config_update.annual_reinvestment_amount is not None:
+        config.annual_reinvestment_amount = config_update.annual_reinvestment_amount
+    if config_update.pre_retirement_lump_sum is not None:
+        config.pre_retirement_lump_sum = config_update.pre_retirement_lump_sum
+    if config_update.income_sleeve_pct is not None:
+        config.income_sleeve_pct = config_update.income_sleeve_pct
+    if config_update.dividend_growth_rate is not None:
+        config.dividend_growth_rate = config_update.dividend_growth_rate
+    if config_update.growth_sleeve_return is not None:
+        config.growth_sleeve_return = config_update.growth_sleeve_return
 
     db.commit()
     db.refresh(config)

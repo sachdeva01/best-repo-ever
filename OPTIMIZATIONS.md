@@ -26,7 +26,7 @@ Comprehensive optimization analysis covering performance, security, reliability,
 
 **Files:** `backend/routers/dashboard.py`, `backend/routers/expected_returns.py`
 
-Both files contain `sys.path.append('/Users/ssachdeva/Desktop/my-app/backend')`. This is a security risk (exposes local filesystem structure) and will break in any other environment.
+Both files contain `sys.path.append('/Users/ssachdeva/Documents/Claude/my-app/backend')`. This is a security risk (exposes local filesystem structure) and will break in any other environment.
 
 **Fix:** Replace with relative imports or proper Python module resolution using `__file__` or package-relative paths.
 

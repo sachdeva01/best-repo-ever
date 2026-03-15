@@ -2,7 +2,7 @@
   "name": "recalculate",
   "description": "Recalculate all portfolio and retirement metrics based on current data",
   "command": "./.claude/skills/recalculate.sh",
-  "workingDirectory": "/Users/ssachdeva/Desktop/my-app",
+  "workingDirectory": "/Users/ssachdeva/Documents/Claude/my-app",
   "when": "manual",
   "tags": ["portfolio", "retirement", "calculations", "daily"]
 }

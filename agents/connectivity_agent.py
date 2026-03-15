@@ -10,8 +10,8 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), "backend", ".env"))
+from keychain import load_anthropic_key
+load_anthropic_key()
 
 import anthropic
 import time

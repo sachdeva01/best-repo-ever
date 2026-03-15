@@ -152,6 +152,14 @@ class RetirementConfigUpdate(BaseModel):
     estimated_social_security_monthly: Optional[float] = None
     qualified_dividend_tax_rate: Optional[float] = None
     ordinary_income_tax_rate: Optional[float] = None
+    current_annual_income: Optional[float] = None
+    income_growth_rate: Optional[float] = None
+    expected_portfolio_return: Optional[float] = None
+    annual_reinvestment_amount: Optional[float] = None
+    pre_retirement_lump_sum: Optional[float] = None
+    income_sleeve_pct: Optional[float] = None
+    dividend_growth_rate: Optional[float] = None
+    growth_sleeve_return: Optional[float] = None
 
 
 class RetirementConfigResponse(BaseModel):
@@ -167,6 +175,14 @@ class RetirementConfigResponse(BaseModel):
     estimated_social_security_monthly: float
     qualified_dividend_tax_rate: float
     ordinary_income_tax_rate: float
+    current_annual_income: float
+    income_growth_rate: float
+    expected_portfolio_return: float
+    annual_reinvestment_amount: float
+    pre_retirement_lump_sum: float
+    income_sleeve_pct: float
+    dividend_growth_rate: float
+    growth_sleeve_return: float
     created_at: datetime
     updated_at: Optional[datetime]
 
@@ -188,11 +204,15 @@ class RetirementCalculationResponse(BaseModel):
     expenses_at_withdrawal_start: float
 
     # Income analysis
+    current_annual_income: float
+    income_growth_rate: float
     current_portfolio_dividend_yield: float
     current_annual_dividend_income: float
     required_dividend_yield_at_55: float
     required_dividend_yield_at_67: float
     dividend_income_gap: float
+    income_at_withdrawal_start: float
+    income_covers_expenses_now: bool
 
     # Social Security
     estimated_social_security_annual: float
@@ -227,6 +247,11 @@ class ScenarioRequest(BaseModel):
     expected_dividend_yield: Optional[float] = None
     estimated_social_security_monthly: Optional[float] = None
     annual_expenses: Optional[float] = None
+    current_annual_income: Optional[float] = None
+    income_growth_rate: Optional[float] = None
+    expected_portfolio_return: Optional[float] = None
+    annual_reinvestment_amount: Optional[float] = None
+    pre_retirement_lump_sum: Optional[float] = None
 
 
 # Market Data Schemas

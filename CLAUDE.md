@@ -95,6 +95,22 @@ npm install --save-dev vitest @testing-library/react
 npm run test
 ```
 
+## Retirement Strategy — Permanent Rules
+
+**Two-Sleeve Strategy is ALWAYS enabled. Never model as a single portfolio.**
+
+- `income_sleeve_pct` must always be > 0 (default: 0.72 = 72% income sleeve, 28% growth sleeve)
+- `dividend_growth_rate`: 0.035 (3.5%/yr blended yield growth — SCHD ~8%, VIG ~6-7%, munis flat)
+- `growth_sleeve_return`: 0.065 (6.5%/yr growth sleeve return)
+- `portfolio_yield`: 0.045 (4.5% income sleeve yield)
+- Income sleeve principal is FIXED — never spent, never grows via appreciation
+- Income grows only via `dividend_growth_rate`, not portfolio appreciation
+- All surplus cash flow is reinvested into the growth sleeve
+- Deficit is drawn from the growth sleeve only
+
+When running projections, scenarios, or year-by-year calculations, always check that
+`two_sleeve_enabled: true` in the assumptions. If it is false, enable it before proceeding.
+
 ## Deployment Notes
 
 - Backend: Deploy FastAPI with production ASGI server (Gunicorn + Uvicorn workers)

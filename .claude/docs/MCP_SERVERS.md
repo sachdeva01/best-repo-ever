@@ -36,7 +36,7 @@ Model Context Protocol (MCP) servers extend Claude Code's capabilities by connec
 ### 2. ✅ SQLite (ENABLED)
 
 **Status**: Active (restart required)  
-**Database**: `/Users/ssachdeva/Desktop/my-app/backend/portfolio.db`
+**Database**: `/Users/ssachdeva/Documents/Claude/my-app/backend/portfolio.db`
 
 **Capabilities**:
 - Direct SQL queries on portfolio database

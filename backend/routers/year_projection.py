@@ -36,20 +36,28 @@ async def get_year_by_year_projection(db: Session = Depends(get_db)):
             elif expense.recurrence_period == "MULTI_YEAR" and expense.recurrence_interval_years:
                 base_annual_expenses += expense.amount / expense.recurrence_interval_years
 
-    # Parameters
+    # Parameters — all sourced from config, no hardcoded values
     current_age = config.current_age
     withdrawal_start_age = config.withdrawal_start_age
     social_security_start_age = config.social_security_start_age
     target_age = config.target_age
     inflation_rate = config.inflation_rate
-    expected_return = 0.06  # 6% growth
-    expected_yield = 0.0431  # 4.31% from optimal allocation
+    expected_return = config.expected_portfolio_return  # default 6%
+    expected_yield = config.expected_dividend_yield     # default 3%
     social_security_monthly = config.estimated_social_security_monthly
     tax_rate = config.qualified_dividend_tax_rate
+    current_annual_income = config.current_annual_income
+    income_growth_rate = config.income_growth_rate
 
-    # Contributions
-    annual_reinvestment = 20000.0
-    one_time_contribution = 250000.0
+    # Contributions — sourced from config
+    annual_reinvestment = config.annual_reinvestment_amount
+    one_time_contribution = config.pre_retirement_lump_sum
+
+    # Two-sleeve parameters
+    income_sleeve_pct = config.income_sleeve_pct or 0.0
+    dividend_growth_rate = config.dividend_growth_rate or 0.035
+    growth_sleeve_return = config.growth_sleeve_return or 0.065
+    two_sleeve = income_sleeve_pct > 0
 
     years = target_age - current_age
     portfolio_value = starting_portfolio_value
@@ -73,8 +81,15 @@ async def get_year_by_year_projection(db: Session = Depends(get_db)):
         # Net expenses after Social Security
         net_expenses = inflated_expenses - social_security_income
 
-        # Calculate income from portfolio (based on start of year value)
-        portfolio_income_pretax = portfolio_value * expected_yield
+        # Calculate income from portfolio
+        if two_sleeve and age >= withdrawal_start_age:
+            # Two-sleeve: income sleeve principal is fixed; yield grows via dividend growth
+            years_in_withdrawal = age - withdrawal_start_age
+            income_sleeve_value = starting_portfolio_value * income_sleeve_pct
+            portfolio_income_pretax = income_sleeve_value * expected_yield * ((1 + dividend_growth_rate) ** years_in_withdrawal)
+        else:
+            # Single portfolio: income based on current portfolio value
+            portfolio_income_pretax = portfolio_value * expected_yield
         portfolio_income_aftertax = portfolio_income_pretax * (1 - tax_rate)
 
         # Add one-time contribution at age 54 (last year before withdrawal)
@@ -83,13 +98,18 @@ async def get_year_by_year_projection(db: Session = Depends(get_db)):
             contribution = one_time_contribution
             portfolio_value += contribution
 
+        # Income grows at income_growth_rate during accumulation
+        earned_income = 0.0
+        if age < withdrawal_start_age:
+            earned_income = current_annual_income * ((1 + income_growth_rate) ** year)
+
         # Calculate surplus/deficit and reinvestment
         reinvestment = 0.0
         if age >= withdrawal_start_age:
-            # In withdrawal phase - need to cover expenses
+            # In withdrawal phase — cover expenses from portfolio income
             surplus_deficit = portfolio_income_aftertax - net_expenses
 
-            # If surplus, reinvest $20K back into portfolio
+            # If surplus, reinvest back into portfolio
             if surplus_deficit > 0:
                 reinvestment = min(annual_reinvestment, surplus_deficit)
                 portfolio_value += reinvestment
@@ -98,21 +118,29 @@ async def get_year_by_year_projection(db: Session = Depends(get_db)):
             elif surplus_deficit < 0:
                 portfolio_value += surplus_deficit  # Subtract deficit from portfolio
         else:
-            # In accumulation phase - all income is surplus (no withdrawals yet)
-            surplus_deficit = portfolio_income_aftertax
+            # In accumulation phase — earned income + portfolio income vs expenses
+            surplus_deficit = earned_income + portfolio_income_aftertax - inflated_expenses
 
         # Apply growth at end of year (for next year's starting value)
-        if year < years:  # Don't apply growth after final year
-            portfolio_value *= (1 + expected_return)
+        if year < years:
+            if two_sleeve and age >= withdrawal_start_age:
+                # Income sleeve principal stays fixed; only growth sleeve compounds
+                income_sleeve_value = starting_portfolio_value * income_sleeve_pct
+                growth_sleeve_value = portfolio_value - income_sleeve_value
+                growth_sleeve_value *= (1 + growth_sleeve_return)
+                portfolio_value = income_sleeve_value + growth_sleeve_value
+            else:
+                portfolio_value *= (1 + expected_return)
 
         projections.append({
             "year": year,
             "age": age,
             "portfolio_value": round(portfolio_value_start, 2),
+            "earned_income": round(earned_income, 2),
             "portfolio_income_pretax": round(portfolio_income_pretax, 2),
             "portfolio_income_aftertax": round(portfolio_income_aftertax, 2),
             "social_security_income": round(social_security_income, 2),
-            "total_income_aftertax": round(portfolio_income_aftertax + social_security_income, 2),
+            "total_income_aftertax": round(earned_income + portfolio_income_aftertax + social_security_income, 2),
             "expenses": round(inflated_expenses, 2),
             "net_expenses": round(net_expenses, 2),
             "contribution": round(contribution, 2),
@@ -154,6 +182,12 @@ async def get_year_by_year_projection(db: Session = Depends(get_db)):
             "inflation_rate": inflation_rate,
             "tax_rate": tax_rate,
             "annual_reinvestment": annual_reinvestment,
-            "one_time_contribution": one_time_contribution
+            "one_time_contribution": one_time_contribution,
+            "current_annual_income": current_annual_income,
+            "income_growth_rate": income_growth_rate,
+            "two_sleeve_enabled": two_sleeve,
+            "income_sleeve_pct": income_sleeve_pct if two_sleeve else None,
+            "dividend_growth_rate": dividend_growth_rate if two_sleeve else None,
+            "growth_sleeve_return": growth_sleeve_return if two_sleeve else None,
         }
     }

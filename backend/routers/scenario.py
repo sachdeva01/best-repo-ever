@@ -12,7 +12,7 @@ class ScenarioInput(BaseModel):
     # Portfolio assumptions
     portfolio_value: Optional[float] = None
     portfolio_yield: Optional[float] = None
-    portfolio_growth_rate: Optional[float] = None
+    portfolio_growth_rate: Optional[float] = None  # Used only when two-sleeve is disabled
 
     # Retirement assumptions
     current_age: Optional[int] = None
@@ -22,13 +22,18 @@ class ScenarioInput(BaseModel):
     target_portfolio_value: Optional[float] = None
 
     # Income assumptions
-    target_gross_income: Optional[float] = None  # Target gross income at retirement
-    blended_tax_rate: Optional[float] = None  # Blended tax rate (e.g., 0.20 for 20%)
+    target_gross_income: Optional[float] = None
+    blended_tax_rate: Optional[float] = None
     annual_expenses: Optional[float] = None
     social_security_monthly: Optional[float] = None
 
     # Economic assumptions
     inflation_rate: Optional[float] = None
+
+    # Two-sleeve parameters (set income_sleeve_pct > 0 to enable)
+    income_sleeve_pct: Optional[float] = None       # e.g. 0.72 = 72% in income sleeve
+    dividend_growth_rate: Optional[float] = None    # Annual yield growth on income sleeve (default 3.5%)
+    growth_sleeve_return: Optional[float] = None    # Annual return of growth sleeve (default 6.5%)
 
 
 def run_scenario_calculation(db: Session, scenario: ScenarioInput) -> dict:
@@ -102,32 +107,73 @@ def run_scenario_calculation(db: Session, scenario: ScenarioInput) -> dict:
     # Portfolio projection
     portfolio_at_withdrawal = portfolio_value * ((1 + portfolio_growth_rate) ** years_to_withdrawal)
 
-    # Simple projection: grow portfolio, generate income, cover expenses
-    projected_portfolio = portfolio_at_withdrawal
-    for year in range(years_in_retirement):
-        age = withdrawal_start_age + year
-        years_from_start = year
+    # Resolve two-sleeve parameters (fall back to config if available)
+    config = db.query(RetirementConfig).first()
+    income_sleeve_pct = scenario.income_sleeve_pct
+    dividend_growth_rate = scenario.dividend_growth_rate
+    growth_sleeve_return = scenario.growth_sleeve_return
+    if income_sleeve_pct is None:
+        income_sleeve_pct = getattr(config, 'income_sleeve_pct', 0.0) or 0.0
+    if dividend_growth_rate is None:
+        dividend_growth_rate = getattr(config, 'dividend_growth_rate', 0.035) or 0.035
+    if growth_sleeve_return is None:
+        growth_sleeve_return = getattr(config, 'growth_sleeve_return', 0.065) or 0.065
 
-        # Calculate that year's expenses (inflation adjusted)
-        year_expenses = expenses_at_withdrawal * ((1 + inflation_rate) ** years_from_start)
+    two_sleeve = income_sleeve_pct > 0
 
-        # Calculate that year's income
-        year_dividend_income = projected_portfolio * portfolio_yield
+    if two_sleeve:
+        # --- Two-Sleeve Projection ---
+        # Income sleeve: fixed principal, yield grows via dividend growth
+        # Growth sleeve: compounds at growth_sleeve_return, receives surplus each year
+        income_sleeve = portfolio_at_withdrawal * income_sleeve_pct
+        growth_sleeve = portfolio_at_withdrawal * (1 - income_sleeve_pct)
 
-        # Calculate that year's SS income (if applicable)
-        year_ss_income = 0
-        if age >= social_security_start_age:
-            years_since_ss = age - social_security_start_age
-            year_ss_income = ss_annual_at_start * ((1 + inflation_rate) ** years_since_ss)
+        for year in range(years_in_retirement):
+            age = withdrawal_start_age + year
 
-        # Net cash flow
-        year_total_income = year_dividend_income + year_ss_income
-        year_net_cash_flow = year_total_income - year_expenses
+            # Expenses grow with inflation
+            year_expenses = expenses_at_withdrawal * ((1 + inflation_rate) ** year)
 
-        # Update portfolio (grow and add/subtract net cash flow)
-        projected_portfolio = projected_portfolio * (1 + portfolio_growth_rate) + year_net_cash_flow
+            # Income sleeve yield grows via dividend growth (SCHD, VIG effect)
+            year_gross_income = income_sleeve * portfolio_yield * ((1 + dividend_growth_rate) ** year)
+            year_net_income = year_gross_income * (1 - blended_tax_rate)
 
-    final_portfolio_value = projected_portfolio
+            # SS income inflation-adjusted from SS start
+            year_ss_income = 0.0
+            if age >= social_security_start_age:
+                years_since_ss = age - social_security_start_age
+                year_ss_income = ss_annual_at_start * ((1 + inflation_rate) ** years_since_ss)
+
+            # Net cash flow after expenses
+            year_total_income = year_net_income + year_ss_income
+            year_net_cash_flow = year_total_income - year_expenses
+
+            # Surplus → reinvested into growth sleeve; deficit → drawn from growth sleeve
+            growth_sleeve += year_net_cash_flow
+
+            # Growth sleeve compounds at growth_sleeve_return
+            growth_sleeve *= (1 + growth_sleeve_return)
+
+        final_portfolio_value = income_sleeve + growth_sleeve
+    else:
+        # --- Single Portfolio Projection (original logic) ---
+        projected_portfolio = portfolio_at_withdrawal
+        for year in range(years_in_retirement):
+            age = withdrawal_start_age + year
+
+            year_expenses = expenses_at_withdrawal * ((1 + inflation_rate) ** year)
+            year_dividend_income = projected_portfolio * portfolio_yield
+
+            year_ss_income = 0
+            if age >= social_security_start_age:
+                years_since_ss = age - social_security_start_age
+                year_ss_income = ss_annual_at_start * ((1 + inflation_rate) ** years_since_ss)
+
+            year_total_income = year_dividend_income + year_ss_income
+            year_net_cash_flow = year_total_income - year_expenses
+            projected_portfolio = projected_portfolio * (1 + portfolio_growth_rate) + year_net_cash_flow
+
+        final_portfolio_value = projected_portfolio
 
     # Calculate success metrics (use net income after tax)
     income_sufficient_before_ss = net_income_after_tax >= expenses_at_withdrawal
@@ -328,7 +374,7 @@ async def get_crisis_scenario(db: Session = Depends(get_db)):
     current_age = config.current_age if config else 51
     retirement_age = config.withdrawal_start_age if config else 55
     inflation_rate = config.inflation_rate if config else 0.03
-    annual_expenses_today = sum(cat.annual_amount for cat in categories) if categories else 225000
+    annual_expenses_today = sum(cat.annual_amount for cat in categories) if categories else 250000
     tax_rate = 0.20
 
     equity_yield_normal = 0.028
@@ -575,54 +621,79 @@ async def get_scenario_presets(db: Session = Depends(get_db)):
             )
         },
         {
-            "name": "🎯 TWO-SLEEVE @ 53 - Aggressive 5% (High Risk)",
-            "description": "Add $250K. Portfolio: $9.6M. Income: $6.4M @ 5%, Growth: $3.2M. Ends at $52.6M. RISKY - needs high yield!",
+            "name": "⭐ PRIMARY: TWO-SLEEVE @ 53 - Balanced 4.5% (RECOMMENDED)",
+            "description": "PRIMARY PLAN. Add $400K over 2 yrs ($200K/yr). Portfolio: $9.7M. Income: $7.0M @ 4.5% (72%), Growth: $2.7M (28%). Dividend yield grows 3.5%/yr. $275K/yr expenses.",
             "scenario": ScenarioInput(
-                portfolio_value=9608677.0,
-                portfolio_yield=0.05,  # 5% aggressive yield needed
-                portfolio_growth_rate=0.04,
-                target_gross_income=320000.0,
-                blended_tax_rate=0.20,
+                portfolio_value=9700000.0,
+                portfolio_yield=0.045,
+                income_sleeve_pct=0.72,
+                dividend_growth_rate=0.035,
+                growth_sleeve_return=0.065,
+                target_gross_income=316000.0,
+                blended_tax_rate=0.13,
                 current_age=51,
                 withdrawal_start_age=53,
                 social_security_start_age=67,
                 target_age=90,
-                annual_expenses=225000.0,
-                target_portfolio_value=52615925.0
+                annual_expenses=275000.0,
+                target_portfolio_value=49000000.0
             )
         },
         {
-            "name": "🎯 TWO-SLEEVE @ 54 - Balanced 4.5% (RECOMMENDED!)",
-            "description": "Add $375K. Portfolio: $10.1M. Income: $7.1M @ 4.5%, Growth: $3.0M. Ends at $47M. GOLDILOCKS!",
+            "name": "⭐ PRIMARY: TWO-SLEEVE @ 53 - Conservative 4% (Safer)",
+            "description": "PRIMARY PLAN (safer). Portfolio: $9.7M. Income: $7.9M @ 4% (81%), Growth: $1.8M (19%). Dividend yield grows 3.5%/yr. $275K/yr expenses.",
             "scenario": ScenarioInput(
-                portfolio_value=10118024.0,
-                portfolio_yield=0.045,  # 4.5% balanced yield
-                portfolio_growth_rate=0.04,
-                target_gross_income=320000.0,
-                blended_tax_rate=0.20,
+                portfolio_value=9700000.0,
+                portfolio_yield=0.04,
+                income_sleeve_pct=0.81,
+                dividend_growth_rate=0.035,
+                growth_sleeve_return=0.065,
+                target_gross_income=316000.0,
+                blended_tax_rate=0.13,
                 current_age=51,
-                withdrawal_start_age=54,
+                withdrawal_start_age=53,
                 social_security_start_age=67,
                 target_age=90,
-                annual_expenses=225000.0,
-                target_portfolio_value=47023747.0
+                annual_expenses=275000.0,
+                target_portfolio_value=44000000.0
             )
         },
         {
-            "name": "🎯 TWO-SLEEVE @ 57 - Conservative 4% (SPREADSHEET)",
-            "description": "Income: $7.5M @ 4%, Growth: $4.4M. Add $900K over 6 yrs. $300K/yr income. Ends at $39.6M.",
+            "name": "⚠️ WORST CASE: TWO-SLEEVE @ 53 - Wife Retires at 55",
+            "description": "Worst case: wife retires 55 (not 59). Only 2yr income bridge. Growth sleeve $3.7M at age 55. Dividend yield grows 3.5%/yr. Total estate ~$32M at 90. Still safe.",
             "scenario": ScenarioInput(
-                portfolio_value=11876690.0,
+                portfolio_value=9700000.0,
+                portfolio_yield=0.045,
+                income_sleeve_pct=0.72,
+                dividend_growth_rate=0.035,
+                growth_sleeve_return=0.065,
+                target_gross_income=316000.0,
+                blended_tax_rate=0.13,
+                current_age=51,
+                withdrawal_start_age=55,
+                social_security_start_age=67,
+                target_age=90,
+                annual_expenses=275000.0,
+                target_portfolio_value=32000000.0
+            )
+        },
+        {
+            "name": "🔵 BACKUP: TWO-SLEEVE @ 57 - Conservative 4% (Spreadsheet)",
+            "description": "BACKUP PLAN. Income: $7.9M @ 4% (62%), Growth: $4.8M (38%). Add $900K over 6 yrs. Dividend yield grows 3.5%/yr. $316K/yr gross income. $275K/yr expenses.",
+            "scenario": ScenarioInput(
+                portfolio_value=12700000.0,
                 portfolio_yield=0.04,
-                portfolio_growth_rate=0.04,
-                target_gross_income=300000.0,
-                blended_tax_rate=0.20,
+                income_sleeve_pct=0.62,
+                dividend_growth_rate=0.035,
+                growth_sleeve_return=0.065,
+                target_gross_income=316000.0,
+                blended_tax_rate=0.13,
                 current_age=51,
                 withdrawal_start_age=57,
                 social_security_start_age=67,
                 target_age=90,
-                annual_expenses=225000.0,
-                target_portfolio_value=39602033.0
+                annual_expenses=275000.0,
+                target_portfolio_value=40000000.0
             )
         },
         {

@@ -20,7 +20,7 @@ Automated scripts for recalculating portfolio metrics and refreshing dashboard d
 
 **Usage**:
 ```bash
-cd /Users/ssachdeva/Desktop/my-app
+cd /Users/ssachdeva/Documents/Claude/my-app
 ./.claude/skills/recalculate.sh
 ```
 
@@ -55,7 +55,7 @@ Coverage Ratio: 107.6%
 
 **Usage**:
 ```bash
-cd /Users/ssachdeva/Desktop/my-app
+cd /Users/ssachdeva/Documents/Claude/my-app
 ./.claude/skills/refresh-dashboard.sh
 ```
 

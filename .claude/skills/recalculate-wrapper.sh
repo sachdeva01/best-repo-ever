@@ -10,4 +10,4 @@ if ! curl -s "$API_URL/api/health" > /dev/null 2>&1; then
 fi
 
 # Run recalculation
-/Users/ssachdeva/Desktop/my-app/.claude/skills/recalculate.sh
+/Users/ssachdeva/Documents/Claude/my-app/.claude/skills/recalculate.sh

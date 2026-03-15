@@ -97,7 +97,7 @@ echo "All calculations refreshed at $TIMESTAMP"
 echo "======================================================================="
 
 # Log to file
-LOG_DIR="/Users/ssachdeva/Desktop/my-app/.claude/logs"
+LOG_DIR="/Users/ssachdeva/Documents/Claude/my-app/.claude/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/recalculation_$(date '+%Y%m%d').log"
 

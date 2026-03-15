@@ -136,7 +136,7 @@ async def get_quick_stats(db: Session = Depends(get_db)):
     """Get quick statistics for dashboard cards"""
     from models import RetirementConfig
     import sys
-    sys.path.append('/Users/ssachdeva/Desktop/my-app/backend')
+    sys.path.append('/Users/ssachdeva/Documents/Claude/my-app/backend')
     from routers.portfolio_allocation import TARGET_ALLOCATION, get_current_yield
 
     # Get portfolio summary

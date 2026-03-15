@@ -60,7 +60,7 @@ function IncomeAnalysis({ calculation }) {
           <div className="metric-cards">
             <div className="metric-card">
               <span className="metric-label">Annual Expenses at Age {calculation.social_security_start_age}</span>
-              <span className="metric-value expense">{formatCurrency(expensesAt55 * Math.pow(1.03, calculation.social_security_start_age - calculation.withdrawal_start_age))}</span>
+              <span className="metric-value expense">{formatCurrency(expensesAt55 * Math.pow(1 + calculation.inflation_rate, calculation.social_security_start_age - calculation.withdrawal_start_age))}</span>
             </div>
 
             <div className="metric-card">

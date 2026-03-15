@@ -147,7 +147,7 @@ Dashboard  Retirement  Portfolio      Summary Page
 
 ### Check Expense Consistency
 ```bash
-cd /Users/ssachdeva/Desktop/my-app
+cd /Users/ssachdeva/Documents/Claude/my-app
 
 # Expense Tracker
 curl -s http://localhost:8000/api/expenses/total-annual | python3 -c "import json,sys; print('Expense Tracker:', json.load(sys.stdin)['total_annual_expenses'])"

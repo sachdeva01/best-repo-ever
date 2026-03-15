@@ -3,7 +3,7 @@
 # Setup Daily Recalculation
 # This script sets up a cron job to run recalculations daily
 
-SCRIPT_DIR="/Users/ssachdeva/Desktop/my-app/.claude/skills"
+SCRIPT_DIR="/Users/ssachdeva/Documents/Claude/my-app/.claude/skills"
 RECALC_SCRIPT="$SCRIPT_DIR/recalculate.sh"
 CRON_TIME="0 10 * * *"  # 10:00 AM daily
 
@@ -38,13 +38,13 @@ if ! curl -s "$API_URL/api/health" > /dev/null 2>&1; then
 fi
 
 # Run recalculation
-/Users/ssachdeva/Desktop/my-app/.claude/skills/recalculate.sh
+/Users/ssachdeva/Documents/Claude/my-app/.claude/skills/recalculate.sh
 EOF
 
 chmod +x "$WRAPPER_SCRIPT"
 
 # Check if cron job already exists
-CRON_ENTRY="$CRON_TIME $WRAPPER_SCRIPT >> /Users/ssachdeva/Desktop/my-app/.claude/logs/cron.log 2>&1"
+CRON_ENTRY="$CRON_TIME $WRAPPER_SCRIPT >> /Users/ssachdeva/Documents/Claude/my-app/.claude/logs/cron.log 2>&1"
 
 if crontab -l 2>/dev/null | grep -q "recalculate-wrapper.sh"; then
     echo "⚠️  Cron job already exists"
@@ -71,7 +71,7 @@ echo ""
 echo "✅ Daily recalculation cron job added!"
 echo ""
 echo "Schedule: Every day at 10:00 AM"
-echo "Log file: /Users/ssachdeva/Desktop/my-app/.claude/logs/cron.log"
+echo "Log file: /Users/ssachdeva/Documents/Claude/my-app/.claude/logs/cron.log"
 echo ""
 echo "To view current cron jobs: crontab -l"
 echo "To remove this cron job: crontab -e (then delete the line)"
