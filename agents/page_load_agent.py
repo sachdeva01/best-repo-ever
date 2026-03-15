@@ -108,14 +108,20 @@ POST /api/auth/login
 {APP_DIR}/backend/routers/retirement.py
 {APP_DIR}/backend/models.py
 
+## DB Indexes (already verified — do NOT re-check)
+- expenses.is_recurring       ✅ indexed
+- holdings.account_id         ✅ indexed
+- account_snapshots.account_id  ✅ indexed
+- account_snapshots.snapshot_date ✅ indexed
+- market_data.data_type       ✅ indexed (UNIQUE)
+
 ## Your job (skip all discovery — start timing immediately)
 1. Time all dashboard API endpoints above with curl (use %{{time_starttransfer}} and %{{time_total}}).
 2. Check whether any endpoint exceeds 1 second or total load exceeds 5 seconds.
-3. If slow: read the relevant router file to find the root cause (yfinance calls, missing indexes, expensive loops).
-4. Check DB indexes via: sqlite3 {APP_DIR}/backend/portfolio_tracker.db "SELECT name,sql FROM sqlite_master WHERE type='index'"
-5. Produce a concise report: timing table, pass/fail per endpoint, root cause + fix for any failures.
+3. If slow: read the relevant router file to find the root cause (yfinance calls, expensive loops).
+4. Produce a concise report: timing table, pass/fail per endpoint, root cause + fix for any failures.
 
-Be direct. Do not explore the filesystem — all paths are given above. Use at most 8 tool calls."""
+Be direct. Do not explore the filesystem — all paths are given above. Use at most 6 tool calls."""
 
 
 def run() -> str:
