@@ -4,6 +4,10 @@ from database import engine, Base
 from routers import accounts, holdings, expenses, retirement, market_data, portfolio_builder, dashboard, expected_returns, rebalancing, scenario, portfolio_allocation, monte_carlo, year_projection
 from routers import auth
 
+# Backup DB before any migrations or seeds (runs first on every startup)
+from backup import backup_database
+backup_database()
+
 # Create tables and seed defaults on startup
 Base.metadata.create_all(bind=engine)
 from init_db import seed_expense_categories, seed_retirement_config
