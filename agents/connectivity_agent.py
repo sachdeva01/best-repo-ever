@@ -7,6 +7,7 @@ import json
 import subprocess
 import sys
 import os
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -14,11 +15,34 @@ from keychain import load_anthropic_key
 load_anthropic_key()
 
 import anthropic
-import time
+try:
+    import requests as _requests
+except ImportError:
+    _requests = None
 
 client = anthropic.Anthropic()
 
+# Network timeout in seconds (3 s)
+ENDPOINT_TIMEOUT = 3.0
+
 TOOLS = [
+    {
+        "name": "check_endpoint",
+        "description": (
+            "Make an HTTP request to a single endpoint and return the status code, "
+            "latency in ms, and any error. Uses a 3 s network timeout; times out "
+            "gracefully rather than hanging."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url":    {"type": "string", "description": "Full URL to request"},
+                "method": {"type": "string", "description": "HTTP method: GET or POST", "enum": ["GET", "POST"]},
+                "body":   {"type": "object", "description": "Optional JSON body for POST requests"},
+            },
+            "required": ["url", "method"],
+        },
+    },
     {
         "name": "run_command",
         "description": "Run a shell command and return stdout + stderr",
@@ -47,6 +71,48 @@ APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VENV_PYTHON = os.path.join(APP_DIR, "backend", "venv", "bin", "python")
 
 
+def check_endpoint(url: str, method: str = "GET", body: dict = None) -> str:
+    """Make a single HTTP request with a 5 ms timeout and return a structured result."""
+    if _requests is None:
+        return json.dumps({"error": "requests library not available — install it in the venv"})
+
+    t_start = time.perf_counter()
+    try:
+        if method.upper() == "POST":
+            resp = _requests.post(url, json=body or {}, timeout=ENDPOINT_TIMEOUT)
+        else:
+            resp = _requests.get(url, timeout=ENDPOINT_TIMEOUT)
+
+        latency_ms = round((time.perf_counter() - t_start) * 1000, 2)
+        return json.dumps({
+            "status":     resp.status_code,
+            "latency_ms": latency_ms,
+            "error":      None,
+        })
+
+    except _requests.exceptions.Timeout:
+        latency_ms = round((time.perf_counter() - t_start) * 1000, 2)
+        return json.dumps({
+            "status":     None,
+            "latency_ms": latency_ms,
+            "error":      f"Timeout after {ENDPOINT_TIMEOUT * 1000:.0f} ms — server unreachable or too slow",
+        })
+    except _requests.exceptions.ConnectionError as e:
+        latency_ms = round((time.perf_counter() - t_start) * 1000, 2)
+        return json.dumps({
+            "status":     None,
+            "latency_ms": latency_ms,
+            "error":      f"Connection error (server may be down): {e}",
+        })
+    except Exception as e:
+        latency_ms = round((time.perf_counter() - t_start) * 1000, 2)
+        return json.dumps({
+            "status":     None,
+            "latency_ms": latency_ms,
+            "error":      f"Unexpected error: {e}",
+        })
+
+
 def run_command(command: str) -> str:
     try:
         result = subprocess.run(
@@ -71,7 +137,13 @@ def read_file(path: str) -> str:
 
 
 def execute_tool(name: str, tool_input: dict) -> str:
-    if name == "run_command":
+    if name == "check_endpoint":
+        return check_endpoint(
+            url=tool_input["url"],
+            method=tool_input.get("method", "GET"),
+            body=tool_input.get("body"),
+        )
+    elif name == "run_command":
         return run_command(tool_input["command"])
     elif name == "read_file":
         return read_file(tool_input["path"])
@@ -94,12 +166,17 @@ GET  http://localhost:8000/api/market-data          → expect 200, check values
 POST http://localhost:8000/api/auth/login           → expect 401 (with dummy creds)
 
 ## Your job (skip all discovery — run tests immediately)
-1. Hit all 5 endpoints above with curl, capture HTTP status and latency.
+1. Use the `check_endpoint` tool to test each of the 5 endpoints above.
+   - Each call has a 3 s network timeout and returns {{status, latency_ms, error}}.
+   - A null status with a Timeout error means the server is unreachable — do NOT read
+     router source in that case; report a network/process issue instead.
+   - A null status with a Connection error means the server process is likely not running.
+   - Only read a router file when the server responds but returns an unexpected status code.
 2. Test Yahoo Finance via yfinance: run `{VENV_PYTHON} -c "import yfinance as yf; t=yf.Ticker('SPY'); print(t.fast_info.last_price)"`
-3. For any non-expected status code, read the relevant router file and diagnose.
-4. Produce a structured report: PASS/FAIL table with latencies, and root cause + fix for any failures.
+3. Produce a structured report: PASS/FAIL table with latencies, and root cause + fix for any failures.
+   Distinguish clearly between: (a) network/process errors, (b) code-level errors.
 
-Do NOT explore the filesystem. All paths are given above. Use at most 6 tool calls."""
+Do NOT explore the filesystem. All paths are given above. Use at most 7 tool calls."""
 
 
 def run() -> str:
