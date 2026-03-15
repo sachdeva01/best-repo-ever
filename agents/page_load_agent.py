@@ -79,28 +79,56 @@ def execute_tool(name: str, tool_input: dict) -> str:
 
 
 SYSTEM = f"""You are a performance diagnostic agent for a React + FastAPI web app.
-App directory: {APP_DIR}
-Frontend: http://localhost:5173
-Backend:  http://localhost:8000
 
-Your job:
-1. Measure how long the dashboard (http://localhost:5173/dashboard) takes to respond.
-   Use curl with timing to measure it.
-2. Also time key backend API calls that the dashboard depends on.
-3. Check whether total load is under 5 seconds.
-4. If any endpoint is slow (> 1s) or the total is > 5s, investigate why:
-   - Check the relevant backend router code
-   - Look for slow database queries, missing indexes, or expensive computations
-   - Check network overhead
-5. Produce a clear report: what passed, what failed, and specific fixes if needed.
+## Known App Context (do NOT rediscover — use this directly)
+- App directory: {APP_DIR}
+- Frontend: http://localhost:5173 (Vite/React)
+- Backend:  http://localhost:8000 (FastAPI)
+- Database: {APP_DIR}/backend/portfolio_tracker.db (SQLite)
+- Python venv: {APP_DIR}/backend/venv/bin/python
 
-Be thorough but concise. Use tools to gather real data."""
+## Dashboard API endpoints (all under http://localhost:8000)
+GET  /api/dashboard/summary
+GET  /api/dashboard/net-worth
+GET  /api/dashboard/allocation
+GET  /api/dashboard/quick-stats
+GET  /api/expected-returns
+GET  /api/income-comparison
+GET  /api/retirement/config
+GET  /api/market-data
+GET  /api/accounts
+GET  /api/holdings
+POST /api/auth/login
+
+## Key backend router files
+{APP_DIR}/backend/routers/dashboard.py
+{APP_DIR}/backend/routers/market_data.py
+{APP_DIR}/backend/routers/portfolio_allocation.py
+{APP_DIR}/backend/routers/expected_returns.py
+{APP_DIR}/backend/routers/retirement.py
+{APP_DIR}/backend/models.py
+
+## Your job (skip all discovery — start timing immediately)
+1. Time all dashboard API endpoints above with curl (use %{{time_starttransfer}} and %{{time_total}}).
+2. Check whether any endpoint exceeds 1 second or total load exceeds 5 seconds.
+3. If slow: read the relevant router file to find the root cause (yfinance calls, missing indexes, expensive loops).
+4. Check DB indexes via: sqlite3 {APP_DIR}/backend/portfolio_tracker.db "SELECT name,sql FROM sqlite_master WHERE type='index'"
+5. Produce a concise report: timing table, pass/fail per endpoint, root cause + fix for any failures.
+
+Be direct. Do not explore the filesystem — all paths are given above. Use at most 8 tool calls."""
 
 
-def run():
-    print("=" * 60)
-    print("AGENT 1 — Page Load Performance")
-    print("=" * 60)
+def run() -> str:
+    """Run the performance agent and return the full report as a string."""
+    collected = []
+
+    def emit(text: str):
+        print(text)
+        collected.append(text)
+
+    emit("=" * 60)
+    emit("AGENT 1 — Page Load Performance")
+    emit("=" * 60)
 
     messages = [
         {"role": "user", "content": "Run the full page load performance check now."}
@@ -119,17 +147,17 @@ def run():
                 break
             except anthropic.RateLimitError:
                 wait = 20 * (attempt + 1)
-                print(f"[rate limit] waiting {wait}s…")
+                emit(f"[rate limit] waiting {wait}s…")
                 time.sleep(wait)
         else:
-            print("[error] exceeded retries")
-            return
+            emit("[error] exceeded retries")
+            return "\n".join(collected)
 
         messages.append({"role": "assistant", "content": response.content})
 
         for block in response.content:
             if hasattr(block, "type") and block.type == "text":
-                print(block.text)
+                emit(block.text)
 
         if response.stop_reason == "end_turn":
             break
@@ -148,9 +176,10 @@ def run():
         if tool_results:
             messages.append({"role": "user", "content": tool_results})
 
-    print("\n" + "=" * 60)
-    print("AGENT 1 COMPLETE")
-    print("=" * 60)
+    emit("\n" + "=" * 60)
+    emit("AGENT 1 COMPLETE")
+    emit("=" * 60)
+    return "\n".join(collected)
 
 
 if __name__ == "__main__":

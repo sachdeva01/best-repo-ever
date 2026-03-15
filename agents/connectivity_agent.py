@@ -79,39 +79,40 @@ def execute_tool(name: str, tool_input: dict) -> str:
 
 
 SYSTEM = f"""You are a connectivity diagnostic agent for a React + FastAPI web app.
-App directory: {APP_DIR}
-Backend: http://localhost:8000
-Python venv: {VENV_PYTHON}
 
-Your job:
-1. Test all backend API endpoints and report their status codes and response times.
-   Key endpoints to check:
-   - GET  /api/health
-   - GET  /api/accounts
-   - GET  /api/holdings
-   - GET  /api/market-data
-   - POST /api/auth/login (test with dummy creds, expect 401)
+## Known App Context (do NOT rediscover — use this directly)
+- Backend: http://localhost:8000 (FastAPI)
+- Python venv: {VENV_PYTHON}
+- Market data router: {APP_DIR}/backend/routers/market_data.py
+- Auth router:        {APP_DIR}/backend/routers/auth.py
 
-2. Test Yahoo Finance connectivity:
-   - Use curl to hit finance.yahoo.com and check reachability
-   - Use the venv python to run: `{VENV_PYTHON} -c "import yfinance as yf; t=yf.Ticker('SPY'); print(t.fast_info)"`
-   - Check if market_data router is fetching correctly
+## Endpoints to test
+GET  http://localhost:8000/api/health               → expect 200
+GET  http://localhost:8000/api/accounts             → expect 200
+GET  http://localhost:8000/api/holdings             → expect 200
+GET  http://localhost:8000/api/market-data          → expect 200, check values are non-zero
+POST http://localhost:8000/api/auth/login           → expect 401 (with dummy creds)
 
-3. For any failure, read the relevant backend router source to understand why it's failing
-   and suggest a fix.
+## Your job (skip all discovery — run tests immediately)
+1. Hit all 5 endpoints above with curl, capture HTTP status and latency.
+2. Test Yahoo Finance via yfinance: run `{VENV_PYTHON} -c "import yfinance as yf; t=yf.Ticker('SPY'); print(t.fast_info.last_price)"`
+3. For any non-expected status code, read the relevant router file and diagnose.
+4. Produce a structured report: PASS/FAIL table with latencies, and root cause + fix for any failures.
 
-4. Produce a structured report:
-   - PASS / FAIL for each endpoint
-   - Latency numbers
-   - Root cause + fix for any failures
-
-Be methodical. Use tools to gather real data before drawing conclusions."""
+Do NOT explore the filesystem. All paths are given above. Use at most 6 tool calls."""
 
 
-def run():
-    print("=" * 60)
-    print("AGENT 2 — Connectivity Testing")
-    print("=" * 60)
+def run() -> str:
+    """Run the connectivity agent and return the full report as a string."""
+    collected = []
+
+    def emit(text: str):
+        print(text)
+        collected.append(text)
+
+    emit("=" * 60)
+    emit("AGENT 2 — Connectivity Testing")
+    emit("=" * 60)
 
     messages = [
         {"role": "user", "content": "Run the full connectivity test suite now."}
@@ -130,17 +131,17 @@ def run():
                 break
             except anthropic.RateLimitError:
                 wait = 20 * (attempt + 1)
-                print(f"[rate limit] waiting {wait}s…")
+                emit(f"[rate limit] waiting {wait}s…")
                 time.sleep(wait)
         else:
-            print("[error] exceeded retries")
-            return
+            emit("[error] exceeded retries")
+            return "\n".join(collected)
 
         messages.append({"role": "assistant", "content": response.content})
 
         for block in response.content:
             if hasattr(block, "type") and block.type == "text":
-                print(block.text)
+                emit(block.text)
 
         if response.stop_reason == "end_turn":
             break
@@ -159,9 +160,10 @@ def run():
         if tool_results:
             messages.append({"role": "user", "content": tool_results})
 
-    print("\n" + "=" * 60)
-    print("AGENT 2 COMPLETE")
-    print("=" * 60)
+    emit("\n" + "=" * 60)
+    emit("AGENT 2 COMPLETE")
+    emit("=" * 60)
+    return "\n".join(collected)
 
 
 if __name__ == "__main__":
