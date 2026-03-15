@@ -1,0 +1,96 @@
+erDiagram
+    USER {
+        int id PK
+        string username
+        string hashed_password
+        datetime created_at
+    }
+
+    BROKERAGE_ACCOUNT {
+        int id PK
+        string name
+        string brokerage_name
+        string account_type
+        float investments
+        float cash
+        float current_balance
+        float dividend_yield
+        datetime created_at
+        datetime updated_at
+    }
+
+    HOLDING {
+        int id PK
+        int account_id FK
+        string symbol
+        string name
+        string asset_type
+        float quantity
+        float price_per_share
+        float dividend_yield
+        datetime last_updated
+    }
+
+    ACCOUNT_SNAPSHOT {
+        int id PK
+        int account_id FK
+        float balance
+        datetime snapshot_date
+        text notes
+    }
+
+    EXPENSE_CATEGORY {
+        int id PK
+        string name
+        text description
+        float annual_amount
+    }
+
+    EXPENSE {
+        int id PK
+        int category_id FK
+        float amount
+        text description
+        datetime expense_date
+        int is_recurring
+        string recurrence_period
+        int recurrence_interval_years
+        string expense_type
+        datetime created_at
+    }
+
+    RETIREMENT_CONFIG {
+        int id PK
+        int current_age
+        int withdrawal_start_age
+        int social_security_start_age
+        int target_age
+        float target_portfolio_value
+        float inflation_rate
+        float annual_expenses_override
+        float expected_dividend_yield
+        float estimated_social_security_monthly
+        float qualified_dividend_tax_rate
+        float ordinary_income_tax_rate
+        float current_annual_income
+        float income_growth_rate
+        float expected_portfolio_return
+        float annual_reinvestment_amount
+        float pre_retirement_lump_sum
+        float income_sleeve_pct
+        float dividend_growth_rate
+        float growth_sleeve_return
+        datetime created_at
+        datetime updated_at
+    }
+
+    MARKET_DATA {
+        int id PK
+        string data_type
+        float value
+        datetime last_updated
+    }
+
+    BROKERAGE_ACCOUNT ||--o{ HOLDING : "has"
+    BROKERAGE_ACCOUNT ||--o{ ACCOUNT_SNAPSHOT : "records"
+    EXPENSE_CATEGORY ||--o{ EXPENSE : "contains"
