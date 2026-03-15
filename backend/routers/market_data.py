@@ -5,11 +5,15 @@ from database import get_db
 from models import MarketData
 from schemas import MarketDataResponse, AllMarketDataResponse
 import yfinance as yf
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 router = APIRouter()
 
-# Cache duration in minutes
-CACHE_DURATION = 15
+# Cache duration in minutes — 60 min is sufficient for market indices
+CACHE_DURATION = 60
+
+_executor = ThreadPoolExecutor(max_workers=3)
 
 
 def should_refresh_data(last_updated: datetime) -> bool:
@@ -73,43 +77,37 @@ def fetch_external_market_data(data_type: str) -> float:
 
 @router.get("/market-data", response_model=AllMarketDataResponse)
 async def get_all_market_data(db: Session = Depends(get_db)):
-    """Get all current market indicators"""
+    """Get all current market indicators, fetching stale tickers in parallel."""
     data_types = ["10-Year Treasury", "S&P 500", "Nasdaq"]
-    result = {}
+    key_map = {"10-Year Treasury": "treasury_10y", "S&P 500": "sp500", "Nasdaq": "nasdaq"}
 
-    for data_type in data_types:
-        # Get from database
-        market_data = db.query(MarketData).filter(
-            MarketData.data_type == data_type
-        ).first()
+    # Identify which tickers need a refresh
+    rows = {
+        dt: db.query(MarketData).filter(MarketData.data_type == dt).first()
+        for dt in data_types
+    }
+    stale = [dt for dt, row in rows.items() if not row or should_refresh_data(row.last_updated)]
 
-        # Check if needs refresh
-        if not market_data or should_refresh_data(market_data.last_updated):
-            # Fetch new data
-            new_value = fetch_external_market_data(data_type)
+    if stale:
+        # Fetch all stale tickers in parallel
+        loop = asyncio.get_event_loop()
+        new_values = await asyncio.gather(
+            *[loop.run_in_executor(_executor, fetch_external_market_data, dt) for dt in stale]
+        )
 
-            if market_data:
-                market_data.value = new_value
-                market_data.last_updated = datetime.utcnow()
+        # Single batch commit
+        for dt, value in zip(stale, new_values):
+            if rows[dt]:
+                rows[dt].value = value
+                rows[dt].last_updated = datetime.utcnow()
             else:
-                market_data = MarketData(
-                    data_type=data_type,
-                    value=new_value
-                )
-                db.add(market_data)
+                rows[dt] = MarketData(data_type=dt, value=value)
+                db.add(rows[dt])
+        db.commit()
+        for dt in stale:
+            db.refresh(rows[dt])
 
-            db.commit()
-            db.refresh(market_data)
-
-        # Map to response keys
-        key_map = {
-            "10-Year Treasury": "treasury_10y",
-            "S&P 500": "sp500",
-            "Nasdaq": "nasdaq"
-        }
-        result[key_map[data_type]] = market_data
-
-    return result
+    return {key_map[dt]: rows[dt] for dt in data_types}
 
 
 @router.get("/market-data/treasury-10y", response_model=MarketDataResponse)

@@ -4,8 +4,11 @@ from database import engine, Base
 from routers import accounts, holdings, expenses, retirement, market_data, portfolio_builder, dashboard, expected_returns, rebalancing, scenario, portfolio_allocation, monte_carlo, year_projection
 from routers import auth
 
-# Create tables on startup
+# Create tables and seed defaults on startup
 Base.metadata.create_all(bind=engine)
+from init_db import seed_expense_categories, seed_retirement_config
+seed_expense_categories()
+seed_retirement_config()
 
 app = FastAPI(
     title="Portfolio Tracker API",
