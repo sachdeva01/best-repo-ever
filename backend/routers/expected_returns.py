@@ -57,16 +57,8 @@ def calculate_expected_yield_from_market(db: Session) -> float:
     return weighted_yield
 
 
-def calculate_expected_growth_rate(db: Session) -> float:
-    """
-    Calculate expected portfolio growth rate.
-    Conservative estimate: 6% annually.
-    """
-    # Conservative growth rate assumption
-    # Accounts for market volatility, economic cycles, and conservative planning
-    conservative_growth_rate = 0.06
-
-    return conservative_growth_rate
+# Conservative annual growth rate — accounts for market volatility and economic cycles
+CONSERVATIVE_GROWTH_RATE = 0.06
 
 
 @router.get("/expected-returns")
@@ -86,7 +78,7 @@ async def get_expected_returns(db: Session = Depends(get_db)):
     expected_annual_income = current_net_worth * expected_yield
 
     # Calculate expected portfolio growth rate
-    expected_growth_rate = calculate_expected_growth_rate(db)
+    expected_growth_rate = CONSERVATIVE_GROWTH_RATE
 
     # Get current treasury rate for reference
     treasury_data = db.query(MarketData).filter(

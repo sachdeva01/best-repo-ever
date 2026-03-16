@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import { formatCurrency, formatCurrencyDetailed } from '../../utils/formatters'
 import './ExpenseCategoryCard.css'
 
@@ -19,7 +20,7 @@ function ExpenseCategoryCard({ category, onUpdate }) {
 
   const handleSave = async () => {
     if (amount < 0) {
-      alert('Amount cannot be negative')
+      toast.error('Amount cannot be negative')
       return
     }
 
@@ -28,7 +29,7 @@ function ExpenseCategoryCard({ category, onUpdate }) {
       await onUpdate(category.id, { annual_amount: parseFloat(amount) })
       setIsEditing(false)
     } catch (err) {
-      alert('Failed to update category: ' + err.message)
+      toast.error('Failed to update category: ' + err.message)
     } finally {
       setSubmitting(false)
     }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import { useAccounts } from '../hooks/useAccounts'
 import AccountList from '../components/accounts/AccountList'
 import AccountForm from '../components/accounts/AccountForm'
@@ -15,7 +16,7 @@ function AccountsPage() {
       await addAccount(accountData)
       setShowForm(false)
     } catch (err) {
-      alert('Failed to create account: ' + err.message)
+      toast.error('Failed to create account: ' + err.message)
     }
   }
 
@@ -25,7 +26,7 @@ function AccountsPage() {
       setEditingAccount(null)
       setShowForm(false)
     } catch (err) {
-      alert('Failed to update account: ' + err.message)
+      toast.error('Failed to update account: ' + err.message)
     }
   }
 
@@ -38,7 +39,7 @@ function AccountsPage() {
     try {
       await removeAccount(accountId)
     } catch (err) {
-      alert('Failed to delete account: ' + err.message)
+      toast.error('Failed to delete account: ' + err.message)
     }
   }
 

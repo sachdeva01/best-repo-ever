@@ -75,6 +75,8 @@ _YIELD_CACHE_TTL = 86400
 # Price cache — keyed by market slot, refreshed at most twice per day
 from typing import Optional
 
+# NOTE (12-factor VI): In-process memory cache — safe for single-process (dev) deployments.
+# For multi-worker or multi-instance production, replace with a shared cache (e.g. Redis).
 _price_cache: dict = {}
 _price_slot: Optional[str] = None
 _prices_last_fetched: Optional[datetime] = None

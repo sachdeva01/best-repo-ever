@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from database import engine, Base
 from routers import accounts, holdings, expenses, retirement, market_data, portfolio_builder, dashboard, expected_returns, rebalancing, scenario, portfolio_allocation, monte_carlo, year_projection
 from routers import auth
@@ -14,11 +17,15 @@ from init_db import seed_expense_categories, seed_retirement_config
 seed_expense_categories()
 seed_retirement_config()
 
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title="Portfolio Tracker API",
     version="1.0.0",
     description="Capital preservation retirement planning with dividend income strategy"
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS
 app.add_middleware(

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import { createHolding, updateHolding, deleteHolding } from '../../api/accounts'
 import { ASSET_TYPES } from '../../utils/constants'
 import { formatCurrencyDetailed, formatPercentage } from '../../utils/formatters'
@@ -53,7 +54,7 @@ function HoldingsList({ accountId, holdings, onHoldingsChange }) {
       await deleteHolding(holdingId)
       onHoldingsChange()
     } catch (err) {
-      alert('Failed to delete holding: ' + err.message)
+      toast.error('Failed to delete holding: ' + err.message)
     }
   }
 
@@ -94,7 +95,7 @@ function HoldingsList({ accountId, holdings, onHoldingsChange }) {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      alert('Failed to save holding: ' + err.message)
+      toast.error('Failed to save holding: ' + err.message)
     } finally {
       setSubmitting(false)
     }

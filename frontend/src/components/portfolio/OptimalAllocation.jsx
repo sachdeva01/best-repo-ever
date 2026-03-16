@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { formatCurrency, formatPercentage } from '../../utils/formatters'
 import { fetchPortfolioAllocation, implementPortfolioAllocation } from '../../api/portfolioAllocation'
 import { fetchTotalAnnualExpenses } from '../../api/expenseTracking'
@@ -24,13 +25,13 @@ function OptimalAllocation() {
   const implementMutation = useMutation({
     mutationFn: implementPortfolioAllocation,
     onSuccess: () => {
-      alert('Portfolio allocation implemented successfully!')
+      toast.success('Portfolio allocation implemented successfully!')
       queryClient.invalidateQueries({ queryKey: queryKeys.portfolio.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
     onError: (err) => {
-      alert('Failed to implement allocation: ' + err.message)
+      toast.error('Failed to implement allocation: ' + err.message)
     },
   })
 

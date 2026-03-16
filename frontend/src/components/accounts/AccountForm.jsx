@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 import { useQuery } from '@tanstack/react-query'
 import { fetchAccounts } from '../../api/accounts'
 import { ACCOUNT_TYPES } from '../../utils/constants'
@@ -115,7 +116,7 @@ function AccountForm({ account, onSubmit, onCancel }) {
         })
       }
     } catch (err) {
-      console.error('Form submission error:', err)
+      toast.error('Failed to save account: ' + (err.response?.data?.detail || err.message))
     } finally {
       setSubmitting(false)
     }
