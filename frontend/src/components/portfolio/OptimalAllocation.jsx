@@ -1,23 +1,23 @@
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatCurrency, formatPercentage } from '../../utils/formatters'
-import { fetchPortfolioAllocation, implementPortfolioAllocation, fetchHistoricalPerformance } from '../../api/portfolioAllocation'
+import { fetchPortfolioAllocation, implementPortfolioAllocation } from '../../api/portfolioAllocation'
+import { fetchTotalAnnualExpenses } from '../../api/expenseTracking'
 import { queryKeys } from '../../api/queryKeys'
 import './OptimalAllocation.css'
 
 function OptimalAllocation() {
   const queryClient = useQueryClient()
-  const [showHistorical, setShowHistorical] = useState(false)
 
   const { data: allocation, isLoading: loading, error: allocationError } = useQuery({
     queryKey: queryKeys.portfolio.allocation(),
     queryFn: fetchPortfolioAllocation,
   })
 
-  const { data: historical } = useQuery({
-    queryKey: queryKeys.portfolio.historicalPerformance(),
-    queryFn: fetchHistoricalPerformance,
+  const { data: expensesData } = useQuery({
+    queryKey: queryKeys.expenses.totalAnnual(),
+    queryFn: fetchTotalAnnualExpenses,
   })
+  const annualExpenses = expensesData?.total_annual_expenses || 0
 
   const error = allocationError?.message || null
 
@@ -101,7 +101,7 @@ function OptimalAllocation() {
         <div className="summary-card surplus">
           <span className="card-icon">✓</span>
           <div className="card-content">
-            <span className="card-value">{formatCurrency((allocation.total_after_tax_income || allocation.total_annual_income) - 221000)}</span>
+            <span className="card-value">{formatCurrency((allocation.total_after_tax_income || allocation.total_annual_income) - annualExpenses)}</span>
             <span className="card-label">After-Tax Surplus (vs $221K expenses)</span>
           </div>
         </div>
@@ -171,74 +171,6 @@ function OptimalAllocation() {
         ))}
       </div>
 
-      {historical && (
-        <div className="historical-performance-section">
-          <div className="section-header">
-            <h2>📊 Historical Performance & Yields</h2>
-            <button
-              className="toggle-button"
-              onClick={() => setShowHistorical(!showHistorical)}
-            >
-              {showHistorical ? '▼ Hide Performance Data' : '▶ Show Performance Data'}
-            </button>
-          </div>
-
-          {showHistorical && (
-            <>
-              {Object.entries(historical.historical_performance).map(([category, data]) => (
-                <div key={category} className="performance-category">
-                  <h3 className="performance-category-title">{category}</h3>
-                  <div className="performance-table-wrapper">
-                    <table className="performance-table">
-                      <thead>
-                        <tr>
-                          <th>Symbol</th>
-                          <th>Name</th>
-                          <th>Current Yield</th>
-                          <th>3-Yr Return</th>
-                          <th>5-Yr Return</th>
-                          <th>10-Yr Return</th>
-                          <th>20-Yr Return</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.etfs.map((etf) => (
-                          <tr key={etf.symbol}>
-                            <td className="symbol-cell">{etf.symbol}</td>
-                            <td className="name-cell">{etf.name}</td>
-                            <td className="yield-cell">{formatPercentage(etf.current_yield, 2)}</td>
-                            <td className={`return-cell ${etf.return_3yr > 0 ? 'positive' : 'negative'}`}>
-                              {etf.return_3yr ? `${etf.return_3yr > 0 ? '+' : ''}${etf.return_3yr.toFixed(2)}%` : 'N/A'}
-                            </td>
-                            <td className={`return-cell ${etf.return_5yr > 0 ? 'positive' : 'negative'}`}>
-                              {etf.return_5yr ? `${etf.return_5yr > 0 ? '+' : ''}${etf.return_5yr.toFixed(2)}%` : 'N/A'}
-                            </td>
-                            <td className={`return-cell ${etf.return_10yr > 0 ? 'positive' : 'negative'}`}>
-                              {etf.return_10yr ? `${etf.return_10yr > 0 ? '+' : ''}${etf.return_10yr.toFixed(2)}%` : 'N/A'}
-                            </td>
-                            <td className={`return-cell ${etf.return_20yr > 0 ? 'positive' : 'negative'}`}>
-                              {etf.return_20yr ? `${etf.return_20yr > 0 ? '+' : ''}${etf.return_20yr.toFixed(2)}%` : 'N/A'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
-
-              <div className="performance-notes">
-                <h4>📋 About This Data:</h4>
-                <ul>
-                  {historical.notes.map((note, index) => (
-                    <li key={index}>{note}</li>
-                  ))}
-                </ul>
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       <div className="allocation-notes">
         <h3>📌 Important Notes</h3>
@@ -248,7 +180,7 @@ function OptimalAllocation() {
           {allocation.total_after_tax_income && (
             <li><strong>After-Tax Income:</strong> {formatCurrency(allocation.total_after_tax_income)} annually (after {allocation.tax_rates?.qualified_dividend}% qualified dividend tax and {allocation.tax_rates?.ordinary_income}% ordinary income tax)</li>
           )}
-          <li><strong>After-Tax Surplus:</strong> You'll have {formatCurrency((allocation.total_after_tax_income || allocation.total_annual_income) - 221000)} after-tax surplus annually for reinvestment or additional spending</li>
+          <li><strong>After-Tax Surplus:</strong> You'll have {formatCurrency((allocation.total_after_tax_income || allocation.total_annual_income) - annualExpenses)} after-tax surplus annually for reinvestment or additional spending</li>
           <li><strong>Capital Preservation:</strong> This allocation allows you to live entirely off dividends/interest while preserving principal</li>
           <li><strong>Tax Treatment:</strong> Dividend Growth Stocks, Preferred Stock, and Growth Equities receive qualified dividend treatment (15%). High-Yield Bonds, REITs, Treasury/TIPS, and Cash receive ordinary income treatment (30%)</li>
           <li><strong>Diversification:</strong> Portfolio is diversified across 7 asset categories and 15 different ETFs</li>

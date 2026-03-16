@@ -10,7 +10,3 @@ export const implementPortfolioAllocation = async () => {
   return data
 }
 
-export const fetchHistoricalPerformance = async () => {
-  const { data } = await apiClient.get('/api/portfolio-allocation/historical-performance')
-  return data
-}

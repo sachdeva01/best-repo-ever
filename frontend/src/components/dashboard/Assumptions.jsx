@@ -27,8 +27,8 @@ function Assumptions({ config, stats, expectedReturns }) {
       items: [
         { label: "Expected Annual Growth Rate", value: formatPercentage((expectedReturns?.expected_growth_rate || 0.06) * 100, 0), note: "Conservative market growth assumption" },
         { label: "Expected Portfolio Yield", value: formatPercentage((expectedReturns?.expected_portfolio_yield || 0.037) * 100, 2), note: "Based on optimal allocation with real-time ETF yields" },
-        { label: "Annual Reinvestment from Surplus", value: "$20,000", note: "Reinvested annually for compound growth" },
-        { label: "One-time Contribution (by age 55)", value: "$250,000", note: "Additional capital injection" }
+        { label: "Annual Reinvestment from Surplus", value: formatCurrency(config.annual_reinvestment_amount || 0), note: "Reinvested annually for compound growth" },
+        { label: "One-time Contribution (by age 55)", value: formatCurrency(config.pre_retirement_lump_sum || 0), note: "Additional capital injection" }
       ]
     },
     {
@@ -42,7 +42,7 @@ function Assumptions({ config, stats, expectedReturns }) {
     {
       category: "Expenses & Income",
       items: [
-        { label: "Current Annual Expenses", value: formatCurrency(stats?.total_annual_expenses || 221000) },
+        { label: "Current Annual Expenses", value: formatCurrency(stats?.total_annual_expenses || 0) },
         { label: "Inflation Rate", value: formatPercentage(config.inflation_rate * 100, 1), note: "Applied to expense projections" },
         { label: "Estimated Social Security (Monthly)", value: formatCurrency(config.estimated_social_security_monthly || 3000), note: "Starts at age 67" }
       ]

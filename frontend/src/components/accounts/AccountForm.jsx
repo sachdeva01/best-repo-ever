@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
-import { BROKERAGES, ACCOUNT_TYPES } from '../../utils/constants'
+import { useQuery } from '@tanstack/react-query'
+import { fetchAccounts } from '../../api/accounts'
+import { ACCOUNT_TYPES } from '../../utils/constants'
+import { queryKeys } from '../../api/queryKeys'
 import './AccountForm.css'
 
 function AccountForm({ account, onSubmit, onCancel }) {
@@ -13,6 +16,12 @@ function AccountForm({ account, onSubmit, onCancel }) {
   })
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+
+  const { data: allAccounts = [] } = useQuery({
+    queryKey: queryKeys.accounts.all,
+    queryFn: fetchAccounts,
+  })
+  const existingBrokerages = [...new Set(allAccounts.map(a => a.brokerage_name).filter(Boolean))].sort()
 
   useEffect(() => {
     if (account) {
@@ -130,18 +139,20 @@ function AccountForm({ account, onSubmit, onCancel }) {
 
       <div className="form-group">
         <label htmlFor="brokerage_name">Brokerage *</label>
-        <select
+        <input
+          type="text"
           id="brokerage_name"
           name="brokerage_name"
+          list="brokerage-list"
           value={formData.brokerage_name}
           onChange={handleChange}
+          placeholder="e.g., Fidelity"
           className={errors.brokerage_name ? 'error' : ''}
-        >
-          <option value="">Select brokerage</option>
-          {BROKERAGES.map(brokerage => (
-            <option key={brokerage} value={brokerage}>{brokerage}</option>
-          ))}
-        </select>
+          autoComplete="off"
+        />
+        <datalist id="brokerage-list">
+          {existingBrokerages.map(b => <option key={b} value={b} />)}
+        </datalist>
         {errors.brokerage_name && <span className="error-message">{errors.brokerage_name}</span>}
       </div>
 
