@@ -1,7 +1,11 @@
+import logging
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models import BrokerageAccount, MarketData
+from routers.portfolio_allocation import TARGET_ALLOCATION, get_current_yield
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -106,9 +110,6 @@ async def get_income_comparison(db: Session = Depends(get_db)):
     Compare current actual income vs expected income from optimal allocation with real-time yields.
     """
     from models import Holding, RetirementConfig
-    import sys
-    sys.path.append('/Users/ssachdeva/Documents/Claude/my-app/backend')
-    from routers.portfolio_allocation import TARGET_ALLOCATION, get_current_yield
 
     # Get current net worth
     accounts = db.query(BrokerageAccount).all()

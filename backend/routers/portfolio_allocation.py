@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from database import get_db
@@ -6,6 +7,8 @@ import yfinance as yf
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from zoneinfo import ZoneInfo
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -123,7 +126,7 @@ def _refresh_prices_background() -> None:
     _price_cache.update(results)
     _price_slot = slot
     _prices_last_fetched = datetime.now(ET)
-    print(f"[prices] refreshed for slot {slot}: {results}")
+    logger.info("Prices refreshed for slot %s: %s", slot, results)
 
 
 def get_current_yield(symbol: str) -> float:

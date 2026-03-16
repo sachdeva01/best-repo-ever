@@ -1,9 +1,13 @@
+import logging
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models import BrokerageAccount, Holding, AccountSnapshot, Expense
+from routers.portfolio_allocation import TARGET_ALLOCATION, get_current_yield
 from schemas import PortfolioSummaryResponse
 from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -135,9 +139,6 @@ async def get_asset_allocation(db: Session = Depends(get_db)):
 async def get_quick_stats(db: Session = Depends(get_db)):
     """Get quick statistics for dashboard cards"""
     from models import RetirementConfig
-    import sys
-    sys.path.append('/Users/ssachdeva/Documents/Claude/my-app/backend')
-    from routers.portfolio_allocation import TARGET_ALLOCATION, get_current_yield
 
     # Get portfolio summary
     accounts = db.query(BrokerageAccount).all()

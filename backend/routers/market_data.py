@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
@@ -7,6 +8,8 @@ from schemas import MarketDataResponse, AllMarketDataResponse
 import yfinance as yf
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -65,7 +68,7 @@ def fetch_external_market_data(data_type: str) -> float:
         return round(float(latest_price), 2)
 
     except Exception as e:
-        print(f"Error fetching market data for {data_type}: {e}")
+        logger.error("Error fetching market data for %s: %s", data_type, e)
         # Return fallback values if API fails
         fallback_data = {
             "10-Year Treasury": 4.25,
