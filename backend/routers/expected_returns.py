@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models import BrokerageAccount, MarketData
-from routers.portfolio_allocation import TARGET_ALLOCATION, get_current_yield
+from routers.portfolio_allocation import TARGET_ALLOCATION as PORTFOLIO_ALLOCATION, get_current_yield
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ async def get_income_comparison(db: Session = Depends(get_db)):
 
     # Calculate expected income from optimal allocation using real-time ETF yields
     expected_annual_income = 0.0
-    for category, details in TARGET_ALLOCATION.items():
+    for category, details in PORTFOLIO_ALLOCATION.items():
         category_percentage = details["percentage"]
         category_value = current_net_worth * category_percentage
 

@@ -210,8 +210,8 @@ async def get_quick_stats(db: Session = Depends(get_db)):
 
     # Calculate projected net worth at withdrawal (4 years from now)
     # Includes: 6% annual growth + $20K/year reinvestment from surplus + $250K one-time contribution
-    from routers.expected_returns import calculate_expected_growth_rate
-    expected_growth_rate = calculate_expected_growth_rate(db)  # Conservative 6% growth
+    from routers.expected_returns import CONSERVATIVE_GROWTH_RATE
+    expected_growth_rate = CONSERVATIVE_GROWTH_RATE
     years_to_withdrawal_calc = years_to_withdrawal if years_to_withdrawal > 0 else 4
     annual_reinvestment = 20000.0  # From surplus
     one_time_contribution = 250000.0
