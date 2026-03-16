@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import toast from 'react-hot-toast'
 import { useDashboard } from '../hooks/useDashboard'
 import MarketDataBar from '../components/dashboard/MarketDataBar'
 import QuickStats from '../components/dashboard/QuickStats'
@@ -10,6 +12,12 @@ import './DashboardPage.css'
 function DashboardPage() {
   const { quickStats, allocation, marketData, expectedReturns, incomeComparison, retirementConfig, loading, error, refetch } = useDashboard()
 
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load dashboard data: ' + error, { id: 'dashboard-error' })
+    }
+  }, [error])
+
   return (
     <div className="dashboard-page">
       <div className="page-header">
@@ -19,8 +27,6 @@ function DashboardPage() {
         </div>
         <RefreshButton onRefresh={refetch} />
       </div>
-
-      {error && <div className="error">{error}</div>}
 
       {loading ? (
         <div className="loading">Loading dashboard...</div>

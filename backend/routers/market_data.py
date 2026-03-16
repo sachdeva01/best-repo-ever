@@ -60,7 +60,8 @@ def fetch_external_market_data(data_type: str) -> float:
                     return round(float(last_price), 2)
             except Exception:
                 pass
-            raise ValueError(f"Empty history and no fast_info price for {data_type}")
+            # Both history and fast_info failed — log and fall through to hardcoded fallbacks
+            logger.warning("Empty history and no fast_info price for %s — using fallback", data_type)
 
         # Get the most recent close price
         latest_price = data['Close'].iloc[-1]
