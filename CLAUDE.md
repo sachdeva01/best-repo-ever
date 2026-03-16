@@ -95,6 +95,25 @@ npm install --save-dev vitest @testing-library/react
 npm run test
 ```
 
+## Data Safety — Permanent Rules
+
+**NEVER delete application data without explicit user confirmation.**
+
+Before executing any of the following, always stop and ask the user:
+- `DELETE /api/expenses/{id}` or any expense deletion
+- `DELETE /api/accounts/{id}` or any account deletion
+- `DELETE /api/holdings/{id}` or any holding deletion
+- Dropping or clearing any database table
+- Running `rm` on `portfolio_tracker.db` or any backup
+- Any script that calls a DELETE endpoint in a loop
+
+When asking, state clearly:
+1. What will be deleted (name/description/amount)
+2. That it cannot be undone without restoring from backup
+3. Wait for explicit "yes" before proceeding
+
+The only exception is test data created in the same session that the user explicitly asked to clean up.
+
 ## Retirement Strategy — Permanent Rules
 
 **Two-Sleeve Strategy is ALWAYS enabled. Never model as a single portfolio.**
