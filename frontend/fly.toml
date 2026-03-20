@@ -1,0 +1,24 @@
+# fly.toml app configuration file generated for retirement-app-frontend on 2026-03-20T14:12:25-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'retirement-app-frontend'
+primary_region = 'iad'
+
+[build]
+  [build.args]
+    VITE_API_URL = "https://retirement-app-backend.fly.dev"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = '256mb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 256
