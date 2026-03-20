@@ -18,6 +18,12 @@ KEEP = 7  # number of backups to retain
 
 
 def backup_database():
+    # Skip if using PostgreSQL (backup only applies to SQLite)
+    database_url = os.getenv("DATABASE_URL", "sqlite")
+    if "postgresql" in database_url or "postgres" in database_url:
+        logger.info("PostgreSQL detected — skipping SQLite backup")
+        return
+
     # Skip if DB doesn't exist yet (first ever run)
     if not os.path.exists(DB_PATH):
         logger.info("No database found — skipping backup (first run)")
