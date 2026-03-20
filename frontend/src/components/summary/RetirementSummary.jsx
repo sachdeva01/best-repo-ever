@@ -379,7 +379,7 @@ function RetirementSummary() {
       </section>
 
       {/* Year-by-Year Projection */}
-      <YearByYearProjection assumptions={assumptions} expensesByAge={expensesByAge} />
+      <YearByYearProjection />
 
       {/* Key Insights */}
       <section className="summary-section insights">

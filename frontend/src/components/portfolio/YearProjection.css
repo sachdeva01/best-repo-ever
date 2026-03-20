@@ -20,7 +20,7 @@
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 }
@@ -29,8 +29,10 @@
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 1.25rem;
+  padding: 1rem 0.75rem;
   text-align: center;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .summary-card.status {
@@ -55,9 +57,11 @@
 }
 
 .summary-value {
-  font-size: 1.5rem;
+  font-size: clamp(1rem, 1.8vw, 1.4rem);
   font-weight: bold;
   color: #1a1a1a;
+  line-height: 1.2;
+  overflow-wrap: break-word;
 }
 
 .summary-value.positive {
@@ -199,6 +203,18 @@
   gap: 1rem;
 }
 
+@media (max-width: 900px) {
+  .interactive-assumptions .assumptions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .interactive-assumptions .assumptions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .assumption-item {
   display: flex;
   justify-content: space-between;
@@ -240,6 +256,133 @@
 
 .interpretation-item strong {
   color: #1e40af;
+}
+
+.interactive-assumptions .assumptions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.interactive-assumptions .assumptions-header h4 {
+  margin: 0;
+}
+
+.assumptions-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.preset-select {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #374151;
+  background: white;
+  cursor: pointer;
+  max-width: 320px;
+}
+
+.preset-select:focus {
+  outline: none;
+  border-color: #1e40af;
+}
+
+.btn-recalculate {
+  background: #1e40af;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-recalculate:hover {
+  background: #1d3a9e;
+}
+
+.btn-reset {
+  background: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-reset:hover {
+  background: #f3f4f6;
+}
+
+.assumption-item.editable {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.assumption-item.editable label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.assumption-item.editable input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #111827;
+  background: white;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.assumption-item.editable input:focus {
+  outline: none;
+  border-color: #1e40af;
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.assumption-item.editable input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.assumption-current {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.interactive-assumptions .assumptions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.overrides-badge {
+  margin-top: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #1e40af;
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {

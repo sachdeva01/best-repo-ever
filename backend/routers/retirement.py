@@ -70,8 +70,10 @@ def calculate_retirement_metrics(
     current_annual_income = _pick('current_annual_income')
     income_growth_rate = _pick('income_growth_rate')
 
-    # Calculate current net worth
-    accounts = db.query(BrokerageAccount).all()
+    # Calculate current net worth (exclude phantom "Recommended Portfolio" account)
+    accounts = db.query(BrokerageAccount).filter(
+        BrokerageAccount.name != "Recommended Portfolio"
+    ).all()
     current_net_worth = sum(acc.current_balance for acc in accounts)
 
     # Calculate current portfolio dividend yield

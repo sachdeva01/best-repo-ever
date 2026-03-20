@@ -1,14 +1,27 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from database import get_db
 from models import BrokerageAccount, ExpenseCategory, RetirementConfig, Expense
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 router = APIRouter()
 
 
 @router.get("/year-projection")
-async def get_year_by_year_projection(db: Session = Depends(get_db)):
+async def get_year_by_year_projection(
+    db: Session = Depends(get_db),
+    expected_return: Optional[float] = Query(None),
+    expected_yield: Optional[float] = Query(None),
+    inflation_rate: Optional[float] = Query(None),
+    tax_rate: Optional[float] = Query(None),
+    annual_reinvestment: Optional[float] = Query(None),
+    one_time_contribution: Optional[float] = Query(None),
+    income_sleeve_pct: Optional[float] = Query(None),
+    dividend_growth_rate: Optional[float] = Query(None),
+    growth_sleeve_return: Optional[float] = Query(None),
+    starting_portfolio: Optional[float] = Query(None),
+    withdrawal_start_age: Optional[int] = Query(None),
+):
     """
     Generate year-by-year projection from current age to target age.
     Shows portfolio value, income, expenses, and surplus for each year.
@@ -18,7 +31,9 @@ async def get_year_by_year_projection(db: Session = Depends(get_db)):
     if not config:
         return {"error": "Configuration not found"}
 
-    accounts = db.query(BrokerageAccount).all()
+    accounts = db.query(BrokerageAccount).filter(
+        BrokerageAccount.name != "Recommended Portfolio"
+    ).all()
     starting_portfolio_value = sum(acc.current_balance for acc in accounts)
 
     # Get expenses from actual expense records (only recurring)
@@ -36,28 +51,31 @@ async def get_year_by_year_projection(db: Session = Depends(get_db)):
             elif expense.recurrence_period == "MULTI_YEAR" and expense.recurrence_interval_years:
                 base_annual_expenses += expense.amount / expense.recurrence_interval_years
 
-    # Parameters — all sourced from config, no hardcoded values
+    # Parameters — config values overridden by query params if provided
     current_age = config.current_age
-    withdrawal_start_age = config.withdrawal_start_age
+    withdrawal_start_age = withdrawal_start_age if withdrawal_start_age is not None else config.withdrawal_start_age
     social_security_start_age = config.social_security_start_age
     target_age = config.target_age
-    inflation_rate = config.inflation_rate
-    expected_return = config.expected_portfolio_return  # default 6%
-    expected_yield = config.expected_dividend_yield     # default 3%
+    inflation_rate = inflation_rate if inflation_rate is not None else config.inflation_rate
+    expected_return = expected_return if expected_return is not None else config.expected_portfolio_return
+    expected_yield = expected_yield if expected_yield is not None else config.expected_dividend_yield
     social_security_monthly = config.estimated_social_security_monthly
-    tax_rate = config.qualified_dividend_tax_rate
+    tax_rate = tax_rate if tax_rate is not None else config.qualified_dividend_tax_rate
     current_annual_income = config.current_annual_income
     income_growth_rate = config.income_growth_rate
 
-    # Contributions — sourced from config
-    annual_reinvestment = config.annual_reinvestment_amount
-    one_time_contribution = config.pre_retirement_lump_sum
+    # Contributions — config values overridden by query params if provided
+    annual_reinvestment = annual_reinvestment if annual_reinvestment is not None else config.annual_reinvestment_amount
+    one_time_contribution = one_time_contribution if one_time_contribution is not None else config.pre_retirement_lump_sum
 
-    # Two-sleeve parameters
-    income_sleeve_pct = config.income_sleeve_pct or 0.0
-    dividend_growth_rate = config.dividend_growth_rate or 0.035
-    growth_sleeve_return = config.growth_sleeve_return or 0.065
+    # Two-sleeve parameters — query params override config
+    income_sleeve_pct = income_sleeve_pct if income_sleeve_pct is not None else (config.income_sleeve_pct or 0.0)
+    dividend_growth_rate = dividend_growth_rate if dividend_growth_rate is not None else (config.dividend_growth_rate or 0.035)
+    growth_sleeve_return = growth_sleeve_return if growth_sleeve_return is not None else (config.growth_sleeve_return or 0.065)
     two_sleeve = income_sleeve_pct > 0
+
+    if starting_portfolio is not None:
+        starting_portfolio_value = starting_portfolio
 
     years = target_age - current_age
     portfolio_value = starting_portfolio_value

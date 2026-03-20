@@ -41,9 +41,11 @@ def run_scenario_calculation(db: Session, scenario: ScenarioInput) -> dict:
     Run retirement projection with custom scenario parameters.
     Uses current values as defaults if not specified.
     """
-    # Get current config and portfolio data
+    # Get current config and portfolio data (exclude phantom "Recommended Portfolio" account)
     config = db.query(RetirementConfig).first()
-    accounts = db.query(BrokerageAccount).all()
+    accounts = db.query(BrokerageAccount).filter(
+        BrokerageAccount.name != "Recommended Portfolio"
+    ).all()
     current_net_worth = sum(acc.current_balance for acc in accounts)
 
     # Use scenario values or fall back to current
@@ -363,7 +365,9 @@ async def get_crisis_scenario(db: Session = Depends(get_db)):
     Model a 2007-2008 financial crisis applied to the current portfolio.
     Returns year-by-year impact on portfolio value, income, expenses, and cushion needed.
     """
-    accounts = db.query(BrokerageAccount).all()
+    accounts = db.query(BrokerageAccount).filter(
+        BrokerageAccount.name != "Recommended Portfolio"
+    ).all()
     config = db.query(RetirementConfig).first()
     categories = db.query(ExpenseCategory).all()
 
@@ -476,7 +480,9 @@ async def get_crisis_scenario(db: Session = Depends(get_db)):
 async def get_scenario_presets(db: Session = Depends(get_db)):
     """Get pre-defined scenarios to test"""
     config = db.query(RetirementConfig).first()
-    accounts = db.query(BrokerageAccount).all()
+    accounts = db.query(BrokerageAccount).filter(
+        BrokerageAccount.name != "Recommended Portfolio"
+    ).all()
     current_net_worth = sum(acc.current_balance for acc in accounts)
 
     # Calculate split portfolio values
