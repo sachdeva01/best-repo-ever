@@ -66,6 +66,8 @@ TOOLS = [
 ]
 
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND_URL = os.getenv("BACKEND_URL", "{BACKEND_URL}")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 
 def check_endpoint(url: str) -> str:
@@ -143,12 +145,12 @@ SYSTEM = f"""You are a performance diagnostic agent for a React + FastAPI web ap
 
 ## Known App Context (do NOT rediscover — use this directly)
 - App directory: {APP_DIR}
-- Frontend: http://localhost:5173 (Vite/React)
-- Backend:  http://localhost:8000 (FastAPI)
-- Database: {APP_DIR}/backend/portfolio_tracker.db (SQLite)
+- Frontend: {FRONTEND_URL} (Vite/React)
+- Backend:  {BACKEND_URL} (FastAPI)
+- Database: {APP_DIR}/backend/portfolio_tracker.db (SQLite, local only)
 - Python venv: {APP_DIR}/backend/venv/bin/python
 
-## Dashboard API endpoints (all under http://localhost:8000)
+## Dashboard API endpoints (all under {BACKEND_URL})
 GET  /api/dashboard/summary
 GET  /api/dashboard/net-worth
 GET  /api/dashboard/allocation
