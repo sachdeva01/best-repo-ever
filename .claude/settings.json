@@ -1,0 +1,32 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import sys,json,subprocess,os; d=json.load(sys.stdin) if not sys.stdin.isatty() else {}; f=d.get('tool_input',{}).get('file_path',''); r=subprocess.run(['python3','-m','py_compile',f],capture_output=True,text=True) if f.endswith('.py') else None; print(r.stderr.strip()) if r and r.returncode!=0 else None\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(pip:*)",
+      "Bash(uvicorn:*)",
+      "Bash(pytest:*)",
+      "Bash(npm:*)",
+      "Bash(node:*)",
+      "Bash(npx:*)",
+      "Bash(git:*)",
+      "Bash(flyctl:*)",
+      "Bash(~/.fly/bin/flyctl:*)",
+      "Bash(curl:*)",
+      "Bash(security:*)"
+    ]
+  }
+}
