@@ -69,6 +69,7 @@ TOOLS = [
 
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VENV_PYTHON = os.path.join(APP_DIR, "backend", "venv", "bin", "python")
+BACKEND_URL = os.getenv("BACKEND_URL", "{BACKEND_URL}")
 
 
 def check_endpoint(url: str, method: str = "GET", body: dict = None) -> str:
@@ -153,17 +154,17 @@ def execute_tool(name: str, tool_input: dict) -> str:
 SYSTEM = f"""You are a connectivity diagnostic agent for a React + FastAPI web app.
 
 ## Known App Context (do NOT rediscover — use this directly)
-- Backend: http://localhost:8000 (FastAPI)
+- Backend: {BACKEND_URL} (FastAPI)
 - Python venv: {VENV_PYTHON}
 - Market data router: {APP_DIR}/backend/routers/market_data.py
 - Auth router:        {APP_DIR}/backend/routers/auth.py
 
 ## Endpoints to test
-GET  http://localhost:8000/api/health               → expect 200
-GET  http://localhost:8000/api/accounts             → expect 200
-GET  http://localhost:8000/api/holdings             → expect 200
-GET  http://localhost:8000/api/market-data          → expect 200, check values are non-zero
-POST http://localhost:8000/api/auth/login           → expect 401 (with dummy creds)
+GET  {BACKEND_URL}/api/health               → expect 200
+GET  {BACKEND_URL}/api/accounts             → expect 200
+GET  {BACKEND_URL}/api/holdings             → expect 200
+GET  {BACKEND_URL}/api/market-data          → expect 200, check values are non-zero
+POST {BACKEND_URL}/api/auth/login           → expect 401 (with dummy creds)
 
 ## Your job (skip all discovery — run tests immediately)
 1. Use the `check_endpoint` tool to test each of the 5 endpoints above.
